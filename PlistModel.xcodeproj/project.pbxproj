@@ -21,6 +21,11 @@
 		801E13B41912146700F282BA /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 801E13961912146700F282BA /* UIKit.framework */; };
 		801E13BC1912146700F282BA /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 801E13BA1912146700F282BA /* InfoPlist.strings */; };
 		801E13BE1912146700F282BA /* PlistModelTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13BD1912146700F282BA /* PlistModelTests.m */; };
+		801E13CA191214CC00F282BA /* PlistModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13C9191214CC00F282BA /* PlistModel.m */; };
+		801E13D0191216BF00F282BA /* CustomModelOne.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13CF191216BF00F282BA /* CustomModelOne.m */; };
+		801E13D3191216C900F282BA /* CustomModelTwo.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13D2191216C900F282BA /* CustomModelTwo.m */; };
+		801E13D5191216DB00F282BA /* CustomModel.plist in Resources */ = {isa = PBXBuildFile; fileRef = 801E13D4191216DB00F282BA /* CustomModel.plist */; };
+		801E13D819121A2600F282BA /* CustomModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13D719121A2600F282BA /* CustomModel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +58,15 @@
 		801E13B91912146700F282BA /* PlistModelTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PlistModelTests-Info.plist"; sourceTree = "<group>"; };
 		801E13BB1912146700F282BA /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		801E13BD1912146700F282BA /* PlistModelTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PlistModelTests.m; sourceTree = "<group>"; };
+		801E13C8191214CC00F282BA /* PlistModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlistModel.h; sourceTree = "<group>"; };
+		801E13C9191214CC00F282BA /* PlistModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PlistModel.m; sourceTree = "<group>"; };
+		801E13CE191216BF00F282BA /* CustomModelOne.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomModelOne.h; sourceTree = "<group>"; };
+		801E13CF191216BF00F282BA /* CustomModelOne.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomModelOne.m; sourceTree = "<group>"; };
+		801E13D1191216C900F282BA /* CustomModelTwo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomModelTwo.h; sourceTree = "<group>"; };
+		801E13D2191216C900F282BA /* CustomModelTwo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomModelTwo.m; sourceTree = "<group>"; };
+		801E13D4191216DB00F282BA /* CustomModel.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = CustomModel.plist; sourceTree = "<group>"; };
+		801E13D619121A2600F282BA /* CustomModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomModel.h; sourceTree = "<group>"; };
+		801E13D719121A2600F282BA /* CustomModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomModel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +126,8 @@
 		801E13981912146700F282BA /* PlistModel */ = {
 			isa = PBXGroup;
 			children = (
+				801E13C7191214CC00F282BA /* PlistModel */,
+				801E13CB1912154E00F282BA /* CustomModel */,
 				801E13A11912146700F282BA /* AppDelegate.h */,
 				801E13A21912146700F282BA /* AppDelegate.m */,
 				801E13A41912146700F282BA /* Main.storyboard */,
@@ -150,6 +166,45 @@
 				801E13BA1912146700F282BA /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		801E13C7191214CC00F282BA /* PlistModel */ = {
+			isa = PBXGroup;
+			children = (
+				801E13C8191214CC00F282BA /* PlistModel.h */,
+				801E13C9191214CC00F282BA /* PlistModel.m */,
+			);
+			path = PlistModel;
+			sourceTree = "<group>";
+		};
+		801E13CB1912154E00F282BA /* CustomModel */ = {
+			isa = PBXGroup;
+			children = (
+				801E13D619121A2600F282BA /* CustomModel.h */,
+				801E13D719121A2600F282BA /* CustomModel.m */,
+				801E13D4191216DB00F282BA /* CustomModel.plist */,
+				801E13CD1912156D00F282BA /* PlistIncluded */,
+				801E13CC1912155D00F282BA /* PlistNotIncluded */,
+			);
+			name = CustomModel;
+			sourceTree = "<group>";
+		};
+		801E13CC1912155D00F282BA /* PlistNotIncluded */ = {
+			isa = PBXGroup;
+			children = (
+				801E13D1191216C900F282BA /* CustomModelTwo.h */,
+				801E13D2191216C900F282BA /* CustomModelTwo.m */,
+			);
+			name = PlistNotIncluded;
+			sourceTree = "<group>";
+		};
+		801E13CD1912156D00F282BA /* PlistIncluded */ = {
+			isa = PBXGroup;
+			children = (
+				801E13CE191216BF00F282BA /* CustomModelOne.h */,
+				801E13CF191216BF00F282BA /* CustomModelOne.m */,
+			);
+			name = PlistIncluded;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -228,6 +283,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				801E13D5191216DB00F282BA /* CustomModel.plist in Resources */,
 				801E13AB1912146700F282BA /* Images.xcassets in Resources */,
 				801E139D1912146700F282BA /* InfoPlist.strings in Resources */,
 				801E13A61912146700F282BA /* Main.storyboard in Resources */,
@@ -249,8 +305,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				801E13CA191214CC00F282BA /* PlistModel.m in Sources */,
+				801E13D3191216C900F282BA /* CustomModelTwo.m in Sources */,
 				801E13A91912146700F282BA /* ViewController.m in Sources */,
 				801E13A31912146700F282BA /* AppDelegate.m in Sources */,
+				801E13D0191216BF00F282BA /* CustomModelOne.m in Sources */,
+				801E13D819121A2600F282BA /* CustomModel.m in Sources */,
 				801E139F1912146700F282BA /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
