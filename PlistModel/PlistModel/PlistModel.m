@@ -199,7 +199,7 @@
         [dictToSave writeToFile:path atomically:YES];
         
         // Run completion
-        completion();
+        if (completion) completion();
         
     });
     
