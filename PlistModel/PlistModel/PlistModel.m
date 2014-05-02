@@ -128,11 +128,18 @@
         objc_property_t property = properties[i];
         const char * name = property_getName(property);
         // NSLog(@"Name: %s", name);
-        // const char * attributes = property_getAttributes(property);
+        const char * attributes = property_getAttributes(property);
         // NSLog(@"Attributes: %s", attributes);
-        
-        // Add to our array
-        [propertyNames addObject:[NSString stringWithUTF8String:name]];
+        NSString * attributeString = [NSString stringWithUTF8String:attributes];
+        NSArray * attributesArray = [attributeString componentsSeparatedByString:@","];
+        if ([attributesArray containsObject:@"R"]) {
+            // is ReadOnly
+            NSLog(@"Properties can NOT be readonly to work properly.  %s will not be set", name);
+        }
+        else {
+            // Add to our array
+            [propertyNames addObject:[NSString stringWithUTF8String:name]];
+        }
     }
     
     // Free our properties
