@@ -206,8 +206,11 @@
         [dictToSave writeToFile:path atomically:YES];
         
         // Run completion
-        if (completion) completion();
-        
+        if (completion) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
     });
     
 }
