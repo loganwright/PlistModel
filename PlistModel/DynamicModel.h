@@ -11,5 +11,6 @@
 @interface DynamicModel : PlistModel
 
 @property (strong, nonatomic) NSString * name;
+@property int counter;
 
 @end

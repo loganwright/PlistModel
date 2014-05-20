@@ -28,7 +28,12 @@
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         dynamicModel.name = @"A new name";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
+        dynamicModel.counter++;
+        NSLog(@"Counter: %i", dynamicModel.counter);
         NSLog(@"DynamicModel: %@", dynamicModel);
+        //[dynamicModel saveInBackgroundWithCompletion:^{
+          //  NSLog(@"SAVED");
+        //}];
     }];
     
 }

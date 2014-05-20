@@ -16,6 +16,16 @@
 @property (strong, nonatomic) NSMutableSet * observingKeyPaths;
 
 @property BOOL isBundledPlist;
+/*
+To allow properties to align to the dictionary case insensitive, we will store property names with their corresponding keys in the plist dictionary 'realDictionary'
+
+ Key   : actualPropertyName
+ Value : ActualPropertyNameAsItAppearsInDictionary
+
+ */
+@property (strong, nonatomic) NSMutableDictionary * propertyKeys;
+
+@property (strong, nonatomic) NSString * plistPath;
 
 @end
 
@@ -69,18 +79,37 @@
     self = [super init];
     if (self) {
         
-        // Establish out plistName
+        // Step 1: Establish out plistName
         _plistName = plistName;
         
-        // Step 1: Fetch PLIST & set to our backing dictionary
+        // Step 2: Set our Path
+        NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
+        
+        if (path) {
+            _isBundledPlist = YES;
+        }
+        else {
+            
+            // There isn't already a plist, make one
+            NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
+            
+            // Fetch out plist & set to new path
+            NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString *documentsDirectory = [pathArray objectAtIndex:0];
+            path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
+            
+        }
+        _plistPath = path;
+        
+        // Step 3: Fetch PLIST & set to our backing dictionary
         _realDictionary = [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
         
-        // Step 2: Find properties that exist in plist
+        // Step 4: Find properties that exist in plist
         NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:[self getPropertyNames]];
         NSSet * allKeys = [NSSet setWithArray:_realDictionary.allKeys];
         [propertiesInPlist intersectSet:allKeys];
         
-        // Step 3: Start observing
+        // Step 5: Start observing
         /*
          We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a change.  We must add KVO observers in `setObject` and remove observers in `removeObject`
          */
@@ -92,7 +121,7 @@
             }];
         }
         
-        // Step 4: Set properties to values from plist
+        // Step 6: Set properties to values from plist
         [propertiesInPlist enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
             
             [self setPropertyFromDictionaryValueWithName:propertyName];
@@ -107,6 +136,8 @@
 - (NSMutableDictionary *) getPlist {
     
     // Check to see if there's a Plist included in the main bundle
+    NSString * path = _plistPath;
+    /*
     NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
     
     if (path) {
@@ -124,6 +155,7 @@
         path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
         
     }
+    */
     
     // If it doesn't exist, create it
     NSMutableDictionary * plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
@@ -144,13 +176,24 @@
     unsigned count;
     objc_property_t *properties = class_copyPropertyList([self class], &count);
     
+    // Set the properties to not be included in dictionary
+    NSArray * propertyNamesToBlock = @[@"realDictionary",
+                                       @"plistName",
+                                       @"observingKeyPaths",
+                                       @"isDirty",
+                                       @"isBundledPlist",
+                                       @"propertyKeys",
+                                       @"plistPath"];
+    
     // Parse Out Properties
     for (int i = 0; i < count; i++) {
         objc_property_t property = properties[i];
         const char * name = property_getName(property);
         // NSLog(@"Name: %s", name);
         NSString *stringName = [NSString stringWithUTF8String:name];
-        if ([@[@"realDictionary", @"plistName", @"observingKeyPaths", @"isDirty", @"isBundledPlist"]containsObject:stringName]) {
+
+        // Ignore these properties
+        if ([propertyNamesToBlock containsObject:stringName]) {
             // Block these properties
             continue;
         }
@@ -179,13 +222,15 @@
 #pragma mark DEALLOC & SAVE - OK?
 
 - (void) dealloc {
+    
+    NSLog(@"Dealloc");
 
     // Bundled Plists are immutable, return
     if (_isBundledPlist) {
         return;
     }
     else {
-        
+        NSLog(@"Isn't bundled, is mutable");
         // Need to check if Dirty, if YES, save!
         
         // So we don't have to check it every time
@@ -211,34 +256,33 @@
         
         // Save
         if (_isDirty) {
-            [self saveInBackgroundOnDeallocWithDictionary:_realDictionary withPlistName:_plistName];
+            [self writeDictionaryInBackground:_realDictionary toPath:_plistPath withCompletion:nil];
         }
     }
     
 }
 
 - (void) removeKVO {
-    // RemoveKVO
     [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
         [_realDictionary removeObserver:self forKeyPath:keyPath];
     }];
 }
 
-- (void) saveInBackgroundOnDeallocWithDictionary:(NSDictionary *)dictionaryToSave withPlistName:(NSString *)plistName {
-    
+- (void) writeDictionaryInBackground:(NSDictionary *)dictionary toPath:(NSString *)path withCompletion:(void(^)(void))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-
-        // There isn't already a plist in bundle, or we wouldn't be saving, make one
-        NSString * fullPlistName = [NSString stringWithFormat:@"%@.plist", plistName];
         
-        // Fetch out plist
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        NSString *path = [documentsDirectory stringByAppendingPathComponent:fullPlistName];
+        NSLog(@"Saving NEW .......... dealloc");
+        [dictionary writeToFile:path atomically:YES];
         
-        // Write it to file
-        [dictionaryToSave writeToFile:path atomically:YES];
-
+        if (completion) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                completion();
+            });
+        }
+        else {
+            NSLog(@"No CompletionBlock");
+        }
+        
     });
 }
 
@@ -280,6 +324,8 @@
             __strong typeof(weakSelf) strongSelf = weakSelf;
             
             if (strongSelf) {
+                
+                /*
                 NSString *path = [[NSBundle mainBundle] pathForResource:strongSelf.plistName ofType: @"plist"];
                 
                 if (!path) {
@@ -292,6 +338,10 @@
                     NSString *documentsDirectory = [paths objectAtIndex:0];
                     path = [documentsDirectory stringByAppendingPathComponent:plistName];
                 }
+                */
+                
+                // Get Path
+                NSString *path = _plistPath;
                 
                 // Write it to file
                 [strongSelf.realDictionary writeToFile:path atomically:YES];
@@ -300,11 +350,14 @@
                 strongSelf->_isDirty = NO;
                 
                 // Run completion
+                [strongSelf writeDictionaryInBackground:strongSelf.realDictionary toPath:strongSelf.plistPath withCompletion:completion];
+                /*
                 if (completion) {
                     dispatch_sync(dispatch_get_main_queue(), ^{
                         completion();
                     });
                 }
+                 */
             }
         });
     }
@@ -646,5 +699,8 @@
     
     return [_realDictionary description];
 }
+
+#pragma mark ADDITIONS
+
 
 @end
