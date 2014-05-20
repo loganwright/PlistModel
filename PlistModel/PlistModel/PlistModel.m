@@ -219,6 +219,30 @@ To allow properties to align to the dictionary case insensitive, we will store p
     return propertyNames;
 }
 
+#pragma mark SYNC
+
+- (void) synchronizePropertiesToDictionary {
+    
+    // So we don't have to check it every time
+    BOOL isInfo = [_plistName isEqualToString:@"Info"];
+    
+    // Set our properties to the dictionary before we write it
+    for (NSString * propertyName in [self getPropertyNames]) {
+        
+        // Check if we're using an Info.plist model
+        if (!isInfo) {
+            // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
+            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
+                continue;
+            }
+        }
+        
+        // Make sure our dictionary is set to latest property value
+        [self setDictionaryValueFromPropertyWithName:propertyName];
+    }
+    
+}
+
 #pragma mark DEALLOC & SAVE - OK?
 
 - (void) dealloc {
@@ -227,11 +251,10 @@ To allow properties to align to the dictionary case insensitive, we will store p
 
     // Bundled Plists are immutable, return
     if (_isBundledPlist) {
+        NSLog(@"Not Saving ... Bundled");
         return;
     }
     else {
-        NSLog(@"Isn't bundled, is mutable");
-        // Need to check if Dirty, if YES, save!
         
         // So we don't have to check it every time
         BOOL isInfo = [_plistName isEqualToString:@"Info"];
@@ -257,6 +280,9 @@ To allow properties to align to the dictionary case insensitive, we will store p
         // Save
         if (_isDirty) {
             [self writeDictionaryInBackground:_realDictionary toPath:_plistPath withCompletion:nil];
+        }
+        else {
+            NSLog(@"Not Saving ... Clean");
         }
     }
     

@@ -31,9 +31,9 @@
         dynamicModel.counter++;
         NSLog(@"Counter: %i", dynamicModel.counter);
         NSLog(@"DynamicModel: %@", dynamicModel);
-        //[dynamicModel saveInBackgroundWithCompletion:^{
-          //  NSLog(@"SAVED");
-        //}];
+        [dynamicModel saveInBackgroundWithCompletion:^{
+            NSLog(@"SAVED");
+        }];
     }];
     
 }
