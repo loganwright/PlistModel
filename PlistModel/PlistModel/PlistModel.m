@@ -22,6 +22,8 @@
 
 @implementation PlistModel
 
+@synthesize isDirty = _isDirty;
+
 #pragma mark INITIALIZERS
 
 + (instancetype) plistNamed:(NSString *)plistName {
@@ -175,7 +177,7 @@
 #pragma mark DEALLOC & SAVE - OK?
 
 - (void) dealloc {
-    
+
     // Set to YES so we remove observers
     _isDealloc = YES;
     
@@ -246,8 +248,8 @@
                 // Write it to file
                 [strongSelf.realDictionary writeToFile:path atomically:YES];
                 
-                // Reset dirty
-                strongSelf.isDirty = NO;
+                // Reset dirty - We need to access directly because of readOnly status
+                strongSelf->_isDirty = NO;
                 
                 // Run completion
                 if (completion) {
@@ -361,7 +363,6 @@
 
 - (void) setPropertyFromDictionaryValueWithName:(NSString *)propertyName {
     
-    
     // Get our setter from our string
     SEL propertySetterSelector = [self setterSelectorForPropertyName:propertyName];
     
@@ -453,9 +454,7 @@
                 func(self, propertySetterSelector, 0);
             }
         }
-        
     }
-    
 }
 
 #pragma mark NSMutableDictionary Subclass OverRides -- NECESSARY!
@@ -524,6 +523,36 @@
         // NewValue, We are now dirty
         _isDirty = YES;
     }
+}
+
+#pragma mark IS DIRTY GETTER | SETTER
+
+- (BOOL) isDirty {
+    
+    // Bundled Plists are immutable, don't save (on real devices), so, ALWAYS clean
+    if (_isBundledPlist) {
+        return NO;
+    }
+    
+    // So we don't have to check it every time
+    BOOL isInfo = [_plistName isEqualToString:@"Info"];
+    
+    // Set our properties to the dictionary before we write it
+    for (NSString * propertyName in [self getPropertyNames]) {
+        
+        // Check if we're using an Info.plist model
+        if (!isInfo) {
+            // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
+            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
+                continue;
+            }
+        }
+        
+        // Make sure our dictionary is set to latest property value
+        [self setDictionaryValueFromPropertyWithName:propertyName];
+    }
+    
+    return _isDirty;
 }
 
 @end

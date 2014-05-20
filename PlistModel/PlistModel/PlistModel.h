@@ -10,7 +10,12 @@
 
 @interface PlistModel : NSMutableDictionary
 
-@property (atomic) BOOL isDirty;
+#pragma mark CURRENT DIRTY / CLEAN STATUS
+
+/*!
+ Checks whether or not the current PlistModel has changed
+ */
+@property (atomic, readonly) BOOL isDirty;
 
 #pragma mark CALL SAVE EXPLICITLY
 
