@@ -80,8 +80,6 @@
         NSSet * allKeys = [NSSet setWithArray:_realDictionary.allKeys];
         [propertiesInPlist intersectSet:allKeys];
         
-        NSLog(@"Properties in plist: %@", propertiesInPlist);
-        
         // Step 3: Start observing
         /*
          We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a change.  We must add KVO observers in `setObject` and remove observers in `removeObject`
@@ -515,12 +513,9 @@
 - (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey {
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
-        
-        NSLog(@"AddingKey: %@", aKey);
-        
+    
         // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
         if (![_observingKeyPaths containsObject:aKey]) {
-            NSLog(@"AboutToObserve: %@", aKey);
             [_observingKeyPaths addObject:aKey];
             [_realDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
         }

@@ -11,8 +11,5 @@
 @interface DynamicModel : PlistModel
 
 @property (strong, nonatomic) NSString * name;
-// @property (strong, nonatomic) NSMutableArray * mutableArray;
-
-@property (strong, nonatomic) NSString * StringPropertyKey;
 
 @end
