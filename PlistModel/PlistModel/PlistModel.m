@@ -83,23 +83,10 @@ To allow properties to align to the dictionary case insensitive, we will store p
         _plistName = plistName;
         
         // Step 2: Set our Path
-        NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
+        [self configurePath];
         
-        if (path) {
-            _isBundledPlist = YES;
-        }
-        else {
-            
-            // There isn't already a plist, make one
-            NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
-            
-            // Fetch out plist & set to new path
-            NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-            NSString *documentsDirectory = [pathArray objectAtIndex:0];
-            path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
-            
-        }
-        _plistPath = path;
+        // Step 3: Set our propertyKeys dictionary
+        [self configurePropertyKeys];
         
         // Step 3: Fetch PLIST & set to our backing dictionary
         _realDictionary = [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
@@ -129,6 +116,75 @@ To allow properties to align to the dictionary case insensitive, we will store p
         }];
     }
     return self;
+}
+
+#pragma mark INIT HELPERS
+
+- (void) configurePath {
+    NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
+    
+    if (path) {
+        _isBundledPlist = YES;
+    }
+    else {
+        
+        // There isn't already a plist, make one
+        NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
+        
+        // Fetch out plist & set to new path
+        NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [pathArray objectAtIndex:0];
+        path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
+        
+    }
+    _plistPath = path;
+}
+
+- (void) configurePropertyKeys {
+    _propertyKeys = [NSMutableDictionary dictionary];
+    
+    // Fetch Properties
+    unsigned count;
+    objc_property_t *properties = class_copyPropertyList([self class], &count);
+    
+    // Set the properties to not be included in dictionary
+    NSArray * propertyNamesToBlock = @[@"realDictionary",
+                                       @"plistName",
+                                       @"observingKeyPaths",
+                                       @"isDirty",
+                                       @"isBundledPlist",
+                                       @"propertyKeys",
+                                       @"plistPath"];
+    
+    // Parse Out Properties
+    for (int i = 0; i < count; i++) {
+        objc_property_t property = properties[i];
+        const char * name = property_getName(property);
+        // NSLog(@"Name: %s", name);
+        NSString *stringName = [NSString stringWithUTF8String:name];
+        
+        // Ignore these properties
+        if ([propertyNamesToBlock containsObject:stringName]) {
+            // Block these properties
+            continue;
+        }
+        
+        // Check if READONLY
+        const char * attributes = property_getAttributes(property);
+        NSString * attributeString = [NSString stringWithUTF8String:attributes];
+        NSArray * attributesArray = [attributeString componentsSeparatedByString:@","];
+        if ([attributesArray containsObject:@"R"]) {
+            // is ReadOnly
+            NSLog(@"Properties can NOT be readonly to work properly.  %s will not be set", name);
+        }
+        else {
+            NSString * propertyName = [NSString stringWithUTF8String:name];
+            _propertyKeys[propertyName] = @""; // Just so it will save something
+        }
+    }
+    
+    // Free our properties
+    free(properties);
 }
 
 #pragma mark PLIST FETCH
@@ -169,54 +225,9 @@ To allow properties to align to the dictionary case insensitive, we will store p
 
 - (NSMutableArray *) getPropertyNames {
     
-    // Prepare Package
-    NSMutableArray * propertyNames = [NSMutableArray array];
-    
-    // Fetch Properties
-    unsigned count;
-    objc_property_t *properties = class_copyPropertyList([self class], &count);
-    
-    // Set the properties to not be included in dictionary
-    NSArray * propertyNamesToBlock = @[@"realDictionary",
-                                       @"plistName",
-                                       @"observingKeyPaths",
-                                       @"isDirty",
-                                       @"isBundledPlist",
-                                       @"propertyKeys",
-                                       @"plistPath"];
-    
-    // Parse Out Properties
-    for (int i = 0; i < count; i++) {
-        objc_property_t property = properties[i];
-        const char * name = property_getName(property);
-        // NSLog(@"Name: %s", name);
-        NSString *stringName = [NSString stringWithUTF8String:name];
+    // The keys are all the propertynames
+    return [_propertyKeys.allKeys mutableCopy];
 
-        // Ignore these properties
-        if ([propertyNamesToBlock containsObject:stringName]) {
-            // Block these properties
-            continue;
-        }
-        
-        // Check if READONLY
-        const char * attributes = property_getAttributes(property);
-        NSString * attributeString = [NSString stringWithUTF8String:attributes];
-        NSArray * attributesArray = [attributeString componentsSeparatedByString:@","];
-        if ([attributesArray containsObject:@"R"]) {
-            // is ReadOnly
-            NSLog(@"Properties can NOT be readonly to work properly.  %s will not be set", name);
-        }
-        else {
-            // Add to our array
-            [propertyNames addObject:[NSString stringWithUTF8String:name]];
-        }
-    }
-    
-    // Free our properties
-    free(properties);
-    
-    // Send it off
-    return propertyNames;
 }
 
 #pragma mark SYNC
