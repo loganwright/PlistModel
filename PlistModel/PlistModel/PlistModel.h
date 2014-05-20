@@ -10,6 +10,9 @@
 
 @interface PlistModel : NSMutableDictionary
 
+// INJECTION
+@property (atomic) BOOL isDirty;
+
 #pragma mark CALL SAVE EXPLICITLY
 
 /*!
