@@ -10,13 +10,12 @@
 
 @interface PlistModel : NSMutableDictionary
 
-// INJECTION
 @property (atomic) BOOL isDirty;
 
 #pragma mark CALL SAVE EXPLICITLY
 
 /*!
- Save is automatically called before being deallocated -- If you need to guarantee a save for whatever reason, you can call it here.
+ Save is automatically called before being deallocated -- If you need to guarantee a save for whatever reason, you can call it here. 
  */
 - (void) saveInBackgroundWithCompletion:(void(^)(void))completion;
 
@@ -33,7 +32,6 @@
 + (void) plistNamed:(NSString *)plistName inBackgroundWithBlock:(void(^)(PlistModel * plistModel))completion;
 
 #pragma mark STANDARD INFO.PLIST ITEMS - ONLY SET IF LOADED FROM INFO.PLIST
-
 /*!
  Localization Native Development Region
  */

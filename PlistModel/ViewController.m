@@ -53,7 +53,7 @@
     // Custom Subclassed Model With Plist Created Dynamically
     [CustomModel plistNamed:@"DynamicallyCreatedList" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
-        
+        /*
          NSLog(@"Printing: Dynamic - CustomModel (1st run will be nil because it hasn't been created yet) \n\n");
          CustomModel * customModel = (CustomModel *)plistModel;
          NSLog(@"Dynamic - StringProperty: %@", customModel.StringPropertyKey);
@@ -64,9 +64,9 @@
          NSLog(@"Dynamic - BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
          NSLog(@"Dynamic - FloatProperty: %f", customModel.FloatPropertyKey);
          NSLog(@"\n");
-        
-        //
+        */
         CustomModel * customModel = (CustomModel *)plistModel;
+        NSLog(@"CustomModel: %@", customModel);
         // Set our values
         customModel.StringPropertyKey = @"Hello World!";
         customModel.DatePropertyKey = [NSDate date];
