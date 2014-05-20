@@ -13,7 +13,7 @@
 #import "DynamicModel.h"
 
 @interface ViewController ()
-
+@property (strong, nonatomic) DynamicModel * myDynamicModel;
 @end
 
 @implementation ViewController
@@ -23,16 +23,20 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 
-    /*
-    [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
-        DynamicModel * dynamicModel = (DynamicModel *)plistModel;
-        NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        dynamicModel.name = @"A new name";
-        NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        NSLog(@"DynamicModel: %@", dynamicModel);
-    }];
-    */
     
+    [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
+       _myDynamicModel = (DynamicModel *)plistModel;
+        NSLog(@"Dynamic model: %@", _myDynamicModel);
+        NSLog(@"DynamicModel.name = %@", _myDynamicModel.name);
+        _myDynamicModel.name = @"A stupid new name";
+        NSLog(@"DynamicModel.name = %@", _myDynamicModel.name);
+        // NSLog(@"DynamicModel: %@", dynamicModel);
+        [_myDynamicModel saveInBackgroundWithCompletion:^{
+            NSLog(@"Safe");
+        }];
+    }];
+    
+    /*
     [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
         // Get our custom model from return block
@@ -50,7 +54,7 @@
         NSLog(@"\n");
         
     }];
-    
+    */
 }
 
 - (void)didReceiveMemoryWarning

@@ -15,9 +15,10 @@
 @property (strong, nonatomic) NSString * plistName;
 @property (strong, nonatomic) NSMutableSet * observingKeyPaths;
 
-// **Injection
+@property (strong, nonatomic) NSMutableSet * allProperties;
+
 /*!
- To allow properties to align to the dictionary case insensitive, we will store as such.
+ To allow properties to align to the dictionary case insensitive, we will store property names with their corresponding keys in the plist dictionary 'realDictionary'
  
  Key   : actualPropertyName
  Value : ActualPropertyNameAsItAppearsInDictionary
@@ -40,11 +41,16 @@
 }
 
 + (void) plistNamed:(NSString *)plistName inBackgroundWithBlock:(void(^)(PlistModel * plistModel))completion {
+    
+    NSLog(@"Init");
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
         
+        NSLog(@"BackGound");
         PlistModel * newModel = [[self alloc]initWithPlistName:plistName];
-        
+        NSLog(@"Part Two");
         dispatch_sync(dispatch_get_main_queue(), ^{
+            NSLog(@"MainQueue");
             completion(newModel);
         });
         
@@ -78,63 +84,54 @@
 - (instancetype) initWithPlistName:(NSString *)plistName {
     self = [super init];
     if (self) {
-        
+        NSLog(@"InitW/PlistName: %@", plistName);
         // Establish out plistName
         _plistName = plistName;
         
         // Step 1: Fetch PLIST & set to our backing dictionary
         _realDictionary = [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
+
+        NSLog(@"Dict: %@", _realDictionary);
         
-        // ** Injection Begin **
-        
-        /*
-         attempting to build our dictionary
-         */
+        // Step 2:  Build our dictionary w/ property names and corresponding dictionary keys
         _propertyKeys = [NSMutableDictionary dictionary];
-        NSArray * allPropertiesAsStrings = [self getPropertyNames];
-        NSArray * allPlistKeys = _realDictionary.allKeys;
-        for (NSString * propertyName in allPropertiesAsStrings) {
-            NSInteger index = [allPlistKeys indexOfObjectPassingTest:^BOOL(NSString * plistKey, NSUInteger idx, BOOL *stop) {
-                return [plistKey caseInsensitiveCompare:propertyName] == NSOrderedSame;
+        NSSet * allPlistKeysSet = [NSSet setWithArray:_realDictionary.allKeys];
+        [self.allProperties enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
+            
+            NSSet * dictKeys = [allPlistKeysSet objectsPassingTest:^BOOL(NSString * key, BOOL *stop) {
+                BOOL didPass = NO;
+                if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
+                    didPass = YES;
+                    *stop = YES;
+                }
+                return didPass;
             }];
-            
-            NSLog(@"index: %i", index);
-            
-            _propertyKeys[propertyName] = allPlistKeys[index];
-        }
-        NSLog(@"PropertyKeys: %@", _propertyKeys);
-        
-        // ** Injection End **
-        
-        
-        // Step 2: Find properties that exist in plist
-        // NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:[self getPropertyNames]];
-        // ** Injection Begin **
-        NSMutableSet * propertiesInPlist = [NSMutableSet set];
-        [_propertyKeys enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop) {
-            [propertiesInPlist addObject:obj];
+            NSLog(@"DictKeys: %@", dictKeys);
+            if (dictKeys.count > 0) {
+                _propertyKeys[propertyName] = [dictKeys anyObject];
+            }
         }];
         
-        NSLog(@"Properties in Plist: %@", propertiesInPlist);
-        // ** Injection End **
+        // Step 3: Find properties that exist in plist
+        NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:_propertyKeys.allValues];
+        [propertiesInPlist intersectSet:allPlistKeysSet];
         
-        
-        NSSet * allKeys = [NSSet setWithArray:_realDictionary.allKeys];
-        [propertiesInPlist intersectSet:allKeys];
-        // Step 3: Start observing
+        // Step 4: Start observing
         /*
          We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a change.  We must add KVO observers in `setObject` and remove observers in `removeObject`
          */
         // getPlist(above) will set _isBundledPlist property, should be set at this point
-        if (_isBundledPlist) {
+        if (!_isBundledPlist) {
             // Observe all keys of PlistDictionary
-            _observingKeyPaths = [NSMutableSet setWithSet:allKeys];
+            _observingKeyPaths = [allPlistKeysSet mutableCopy];
+            
             [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
+                NSLog(@"Adding observer: %@", keyPath);
                 [_realDictionary addObserver:self forKeyPath:keyPath options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
             }];
         }
         
-        // Step 4: Set properties to values from plist
+        // Step 5: Set properties to values from plist
         [propertiesInPlist enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
             NSLog(@"Setting: %@", propertyName);
             [self setPropertyFromDictionaryValueWithName:propertyName];
@@ -148,26 +145,10 @@
 
 - (NSMutableDictionary *) getPlist {
     
-    // Check to see if there's a Plist included in the main bundle
-    NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
+    // Get our directory path
+    NSString *path = [self getPathForPlist];
     
-    if (path) {
-        NSLog(@"%@ isBundling %@", NSStringFromClass(self.class), self.plistName);
-        _isBundledPlist = YES;
-    }
-    else {
-        
-        // There isn't already a plist, make one
-        NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
-        
-        // Fetch out plist & set to new path
-        NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [pathArray objectAtIndex:0];
-        path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
-        
-    }
-    
-    // If it doesn't exist, create it
+    // If it doesn't exist, create it by allocating - EXPENSIVE
     NSMutableDictionary * plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
     
     // Return
@@ -222,17 +203,25 @@
 
 - (void) dealloc {
 
+    // RemoveKVO
+    [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
+        NSLog(@"Removing keypath: %@", keyPath);
+        [_realDictionary removeObserver:self forKeyPath:keyPath];
+    }];
+    
     // Bundled Plists are immutable, return
     if (_isBundledPlist) {
         return;
     }
     else {
         
+        NSLog(@"non bundled dealloc");
         // Need to check if Dirty, if YES, save!
         
         // So we don't have to check it every time
         BOOL isInfo = [_plistName isEqualToString:@"Info"];
         
+        /*
         // Set our properties to the dictionary before we write it
         for (NSString * propertyName in [self getPropertyNames]) {
             
@@ -248,28 +237,96 @@
             [self setDictionaryValueFromPropertyWithName:propertyName];
         }
         
+        NSLog(@"Finished sync");
         // AFTER setting objects to dictionary from properties so we can know if dirty
-        [self removeKVO];
+        // RemoveKVO
+        [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
+            [_realDictionary removeObserver:self forKeyPath:keyPath];
+        }];
         
         // Save
         if (_isDirty) {
+            NSLog(@"Is Dirty");
             [self saveInBackgroundOnDeallocWithDictionary:_realDictionary withPlistName:_plistName];
         }
+         */
     }
     
 }
 
-- (void) removeKVO {
-    // RemoveKVO
-    [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
-        [_realDictionary removeObserver:self forKeyPath:keyPath];
-    }];
+void setDictionaryValueFromPropertyWithNameAndObject(NSString *name, PlistModel * object) {
+    
+    // Get the corresponding PlistDictionaryKey from the propertyName
+    NSString * propertyKey = object->_propertyKeys[name];
+    if (!propertyKey) {
+        // Just if for some reason, it doesn't exist
+        propertyKey = name;
+    }
+    
+    SEL propertyGetterSelector = [object getterSelectorForPropertyName:propertyKey];
+    
+    const char * returnType = [object returnTypeOfSelector:propertyGetterSelector];
+    
+    if ([object respondsToSelector:propertyGetterSelector]) {
+        
+        // Get object from our dictionary
+        // strcmp(str1, str2)
+        // 0 if same
+        // A value greater than zero indicates that the first character that does not match has a greater value in str1 than in str2;
+        // And a value less than zero indicates the opposite.
+        
+        // Set our implementation
+        IMP imp = [object methodForSelector:propertyGetterSelector];
+        
+        // Get object to set
+        id objectToSet;
+        NSLog(@"PropertyKey: %@", propertyKey);
+        // Set to property
+        if (strcmp(returnType, @encode(id)) == 0) {
+            //NSLog(@"Is Object");
+            id (*func)(id, SEL) = (void *)imp;
+            objectToSet = func(object, propertyGetterSelector);
+        }
+        else if (strcmp(returnType, @encode(BOOL)) == 0) {
+            //NSLog(@"Is Bool");
+            BOOL (*func)(id, SEL) = (void *)imp;
+            objectToSet = @(func(object, propertyGetterSelector));
+        }
+        else if (strcmp(returnType, @encode(int)) == 0) {
+            //NSLog(@"Is Int");
+            int (*func)(id, SEL) = (void *)imp;
+            objectToSet = @(func(object, propertyGetterSelector));
+        }
+        else if (strcmp(returnType, @encode(float)) == 0) {
+            //NSLog(@"Is Float");
+            float (*func)(id, SEL) = (void *)imp;
+            objectToSet = @(func(object, propertyGetterSelector));
+            
+        }
+        else if (strcmp(returnType, @encode(double)) == 0) {
+            //NSLog(@"Is Double");
+            double (*func)(id, SEL) = (void *)imp;
+            objectToSet = @(func(object, propertyGetterSelector));
+        }
+        
+        if (objectToSet) {
+            NSLog(@"Setting Object: %@", objectToSet);
+            // self[propertyName] = object;
+            [object setObject:objectToSet forKey:propertyKey];
+        }
+        else {
+            [object removeObjectForKey:propertyKey];
+        }
+    }
 }
 
 - (void) saveInBackgroundOnDeallocWithDictionary:(NSDictionary *)dictionaryToSave withPlistName:(NSString *)plistName {
     
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-
+        
+        // Get Path Name
+        // NSString *path = [self getPathForPlist];
         // There isn't already a plist in bundle, or we wouldn't be saving, make one
         NSString * fullPlistName = [NSString stringWithFormat:@"%@.plist", plistName];
         
@@ -277,18 +334,21 @@
         NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString *documentsDirectory = [paths objectAtIndex:0];
         NSString *path = [documentsDirectory stringByAppendingPathComponent:fullPlistName];
-        
         // Write it to file
         [dictionaryToSave writeToFile:path atomically:YES];
-
+        
     });
+    
 }
 
 - (void) saveInBackgroundWithCompletion:(void(^)(void))completion {
 
+    NSLog(@"Save called");
+    
     // Bundled Plists are immutable, don't save (on real devices)
     if (_isBundledPlist) {
         if (completion) {
+            // If completion, that means the dev is trying to save
             NSLog(@"Bundled Plists are Immutable on Real Device");
         }
         return;
@@ -297,25 +357,28 @@
     // So we don't have to check it every time
     BOOL isInfo = [_plistName isEqualToString:@"Info"];
     
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
+    // Set our properties to dictionary before we write it
+    [self.allProperties enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
         
         // Check if we're using an Info.plist model
         if (!isInfo) {
             // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
             if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
+                return;
             }
         }
         
         // Make sure our dictionary is set to latest property value
         // ** Injection
+        NSLog(@"Setting Property");
         [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
+        NSLog(@"Done setting property");
+    }];
+    
     
     // Save if dirty
     if (_isDirty) {
-        
+        NSLog(@"Is Dirty");
         __weak typeof(self) weakSelf = self;
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
@@ -323,18 +386,9 @@
             __strong typeof(weakSelf) strongSelf = weakSelf;
             
             if (strongSelf) {
-                NSString *path = [[NSBundle mainBundle] pathForResource:strongSelf.plistName ofType: @"plist"];
                 
-                if (!path) {
-                    
-                    // There isn't already a plist, make one
-                    NSString * plistName = [NSString stringWithFormat:@"%@.plist", strongSelf.plistName];
-                    
-                    // Fetch out plist
-                    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-                    NSString *documentsDirectory = [paths objectAtIndex:0];
-                    path = [documentsDirectory stringByAppendingPathComponent:plistName];
-                }
+                // Get our path
+                NSString *path = [strongSelf getPathForPlist];
                 
                 // Write it to file
                 [strongSelf.realDictionary writeToFile:path atomically:YES];
@@ -353,11 +407,42 @@
     }
     // Object is clean, run completion if it exists
     else if (completion) {
+        NSLog(@"Showing as clean w/ completion");
         completion();
     }
     else {
         // clean w/ no completion
+        NSLog(@"Showing as clean");
     }
+}
+
+#pragma mark HELPERS
+
+- (NSString *) getPathForPlist {
+    
+    
+    // Check if Path In Bundle
+    NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
+    
+    if (path) {
+        
+        // Set our toggle for future calls
+        _isBundledPlist = YES;
+        
+    }
+    else {
+        
+        // There isn't already a plist, make one
+        NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
+        
+        // Fetch out plist & set to new path
+        NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [pathArray objectAtIndex:0];
+        path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
+        
+    }
+    
+    return path;
 }
 
 #pragma mark SELECTOR ARGUMENT / RETURN TYPE METHODS
@@ -402,16 +487,17 @@
 }
 
 #pragma mark SYNCHRONYZING DICTIONARY AND PROPERTIES
+
 - (void) setDictionaryValueFromPropertyWithName:(NSString *)propertyName {
     
     // Get the corresponding PlistDictionaryKey from the propertyName
-    NSString * propertyKey = _propertyKeys[propertyName];
-    if (!propertyKey) {
+    NSString * propertyAsDictionaryKey = _propertyKeys[propertyName];
+    if (!propertyAsDictionaryKey) {
         // Just if for some reason, it doesn't exist
-        propertyKey = propertyName;
+        propertyAsDictionaryKey = propertyName;
     }
     
-    SEL propertyGetterSelector = [self getterSelectorForPropertyName:propertyKey];
+    SEL propertyGetterSelector = [self getterSelectorForPropertyName:propertyAsDictionaryKey];
     
     const char * returnType = [self returnTypeOfSelector:propertyGetterSelector];
     
@@ -428,9 +514,10 @@
         
         // Get object to set
         id objectToSet;
-        
+        NSLog(@"PropertyKey: %@", propertyAsDictionaryKey);
         // Set to property
         if (strcmp(returnType, @encode(id)) == 0) {
+            NSLog(@"ReturnTypeObject: %@", objectToSet);
             //NSLog(@"Is Object");
             id (*func)(id, SEL) = (void *)imp;
             objectToSet = func(self, propertyGetterSelector);
@@ -458,82 +545,30 @@
         }
         
         if (objectToSet) {
+            NSLog(@"Setting Object: %@", objectToSet);
             // self[propertyName] = object;
-            [self setObject:objectToSet forKey:propertyName];
+            [self setObject:objectToSet forKey:propertyAsDictionaryKey];
         }
         else {
-            [self removeObjectForKey:propertyName];
-        }
-    }
-}
-- (void) ORIGINAL_setDictionaryValueFromPropertyWithName:(NSString *)propertyName {
-    
-    SEL propertyGetterSelector = [self getterSelectorForPropertyName:propertyName];
-    
-    const char * returnType = [self returnTypeOfSelector:propertyGetterSelector];
-    
-    if ([self respondsToSelector:propertyGetterSelector]) {
-        
-        // Get object from our dictionary
-        // strcmp(str1, str2)
-        // 0 if same
-        // A value greater than zero indicates that the first character that does not match has a greater value in str1 than in str2;
-        // And a value less than zero indicates the opposite.
-        
-        // Set our implementation
-        IMP imp = [self methodForSelector:propertyGetterSelector];
-        
-        // Get object to set
-        id objectToSet;
-        
-        // Set to property
-        if (strcmp(returnType, @encode(id)) == 0) {
-            //NSLog(@"Is Object");
-            id (*func)(id, SEL) = (void *)imp;
-            objectToSet = func(self, propertyGetterSelector);
-        }
-        else if (strcmp(returnType, @encode(BOOL)) == 0) {
-            //NSLog(@"Is Bool");
-            BOOL (*func)(id, SEL) = (void *)imp;
-            objectToSet = @(func(self, propertyGetterSelector));
-        }
-        else if (strcmp(returnType, @encode(int)) == 0) {
-            //NSLog(@"Is Int");
-            int (*func)(id, SEL) = (void *)imp;
-            objectToSet = @(func(self, propertyGetterSelector));
-        }
-        else if (strcmp(returnType, @encode(float)) == 0) {
-            //NSLog(@"Is Float");
-            float (*func)(id, SEL) = (void *)imp;
-            objectToSet = @(func(self, propertyGetterSelector));
-            
-        }
-        else if (strcmp(returnType, @encode(double)) == 0) {
-            //NSLog(@"Is Double");
-            double (*func)(id, SEL) = (void *)imp;
-            objectToSet = @(func(self, propertyGetterSelector));
-        }
-        
-        if (objectToSet) {
-            // self[propertyName] = object;
-            [self setObject:objectToSet forKey:propertyName];
-        }
-        else {
-            [self removeObjectForKey:propertyName];
+            [self removeObjectForKey:propertyAsDictionaryKey];
         }
     }
 }
 
 - (void) setPropertyFromDictionaryValueWithName:(NSString *)propertyName {
     
+    NSLog(@"Set");
     // Get our setter from our string
     SEL propertySetterSelector = [self setterSelectorForPropertyName:propertyName];
+    
+    NSLog(@"PropertySetterSelector: %@ for name: %@", NSStringFromSelector(propertySetterSelector), propertyName);
     
     // Make sure it exists as a property
     if ([self respondsToSelector:propertySetterSelector]) {
         
         
         if (_realDictionary[propertyName]) {
+            NSLog(@"Property in dict");
             
             // Index 0 is object, Index 1 is the selector: arguments start at Index 2
             const char * typeOfProperty = [self typeOfArgumentForSelector:propertySetterSelector atIndex:2];
@@ -620,23 +655,86 @@
     }
 }
 
+#pragma mark GETTERS | SETTERS
+
+- (NSMutableSet *) allProperties {
+    
+    if (!_allProperties) {
+        
+        // Prepare Package
+        _allProperties = [NSMutableSet set];
+        
+        // Fetch Properties
+        unsigned count;
+        objc_property_t *properties = class_copyPropertyList([self class], &count);
+        
+        // Parse Out Properties
+        for (int i = 0; i < count; i++) {
+            objc_property_t property = properties[i];
+            const char * name = property_getName(property);
+            // NSLog(@"Name: %s", name);
+            NSString *stringName = [NSString stringWithUTF8String:name];
+            if ([@[@"realDictionary", @"plistName", @"observingKeyPaths", @"isDirty", @"isBundledPlist", @"propertyKeys", @"allProperties"]containsObject:stringName]) {
+                // Block these properties
+                continue;
+            }
+            
+            // Check if READONLY
+            const char * attributes = property_getAttributes(property);
+            NSString * attributeString = [NSString stringWithUTF8String:attributes];
+            NSArray * attributesArray = [attributeString componentsSeparatedByString:@","];
+            if ([attributesArray containsObject:@"R"]) {
+                // is ReadOnly
+                NSLog(@"Properties can NOT be readonly to work properly.  %s will not be set", name);
+            }
+            else {
+                // Add to our array
+                [_allProperties addObject:[NSString stringWithUTF8String:name]];
+            }
+        }
+        
+        // Free our properties
+        free(properties);
+    }
+    
+    return _allProperties;
+}
+
 #pragma mark NSMutableDictionary Subclass Like Interaction -- NECESSARY!
 
 - (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey {
-    
+    NSLog(@"SetObject: %@", anObject);
+    NSLog(@"ForKey   : %@", aKey);
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
+        
+        //BOOL doesIt = [_observingKeyPaths containsObject:aKey];
+        //NSLog(@"Well, does it: %@", doesIt ? @"YES" : @"NO");
     
         // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
-        if (![_observingKeyPaths containsObject:aKey]) {
-            [_observingKeyPaths addObject:aKey];
-            [_realDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        //NSLog(@"ObservingKeyPaths: %@", _observingKeyPaths);
+        if (anObject) {
+            NSLog(@"Object: %@ existsWithKey: %@", anObject, aKey);
+            if (![_observingKeyPaths containsObject:(NSString *)aKey]) {
+                NSLog(@"Adding observer for : %@", aKey);
+                [_observingKeyPaths addObject:aKey];
+                [_realDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+                NSLog(@"Now observing");
+
+            }
+            //       NSLog(@"CurrentObservers: %@", _observingKeyPaths);
+            
+            //     NSLog(@"Setting: %@ forKey: %@", anObject, aKey);
+            // Set the object to our background dictionary
+            NSLog(@"PreObserving: %@", _observingKeyPaths);
+            [_realDictionary setObject:anObject forKey:aKey];
+            NSLog(@"Post");
+            // Update our property -- Just to keep everything synced
+            [self setPropertyFromDictionaryValueWithName:(NSString *)aKey];
         }
-        
-        // Set the object to our background dictionary
-        _realDictionary[aKey] = anObject;
-        
-        // Update our property -- Just to keep everything synced
-        [self setPropertyFromDictionaryValueWithName:(NSString *)aKey];
+        else {
+            
+            NSLog(@"Object: %@ doesNOTexistsWithKey: %@", anObject, aKey);
+        }
     }
     else {
         NSLog(@"Error - Unable to add Object: PlistModel can only take strings as keys");
@@ -677,17 +775,20 @@
 
 #pragma mark KVO OBSERVING
 
-- (void) observeValueForKeyPath:(NSString *)keyPath
-                       ofOject:(id)object
-                         change:(NSDictionary *)change
-                        context:(void *)context {
+- (void) observeValueForKeyPath:(NSString *)keyPath ofOject:(id)object change:(NSDictionary *)change context:(void *)context {
     
+    NSLog(@"Observer triggered: %@", keyPath);
     // If it's already dirty, don't bother
     if (!_isDirty) {
+        NSLog(@"Isn't Dirty");
         if (![change[@"new"]isEqual:change[@"old"]]) {
+            NSLog(@"Is Dirty");
             // NewValue, We are now dirty
             _isDirty = YES;
         }
+    }
+    else {
+        NSLog(@"Is Already Dirty");
     }
 }
 
@@ -703,20 +804,20 @@
     // So we don't have to check it every time
     BOOL isInfo = [_plistName isEqualToString:@"Info"];
     
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
-        
+    // Array from Set
+    [self.allProperties enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
         // Check if we're using an Info.plist model
         if (!isInfo) {
             // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
             if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
+                return; // Block version of 'continue'
             }
         }
         
         // Make sure our dictionary is set to latest property value
         [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
+    }];
+    
     
     // Updating our dictionary to reflect our properties will trigger _isDirty in KVO
     
@@ -725,9 +826,11 @@
 
 #pragma mark DESCRIPTION
 
-- (NSString *) description {
-    ///// ***** NOT WORKING FOR SOME UNKNOWN REASON ****** //
-    NSLog(@"WillDescribePlistModel");
+
+- (NSString *) BLOCKED_description {
+    static int descriptionCount = 0;
+    descriptionCount ++;
+    NSLog(@"Description ran: %i", descriptionCount);
     /*
      We run the following code to update the dictionary so that the natural description prints updated values in case properties have been set.  Helps w/ debugging.
      */
@@ -735,22 +838,41 @@
     // So we don't have to check it every time
     BOOL isInfo = [_plistName isEqualToString:@"Info"];
     
+    NSLog(@"All Keys: %@", _propertyKeys.allKeys);
     // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
+    [self.allProperties enumerateObjectsUsingBlock:^(NSString *propertyName, BOOL *stop) {
         
         // Check if we're using an Info.plist model
         if (!isInfo) {
             // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
             if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
+                return;
             }
         }
-        
+        NSLog(@"Property Named : %@", propertyName);
         // Make sure our dictionary is set to latest property value
         [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
+    }];
     
     return [_realDictionary description];
+}
+
+#pragma mark ENUMERATION
+
+- (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block {
+    [_realDictionary enumerateKeysAndObjectsUsingBlock:block];
+}
+- (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(id key, id obj, BOOL *stop))block {
+    [_realDictionary enumerateKeysAndObjectsWithOptions:opts usingBlock:block];
+}
+
+#pragma mark KEYS & VALUES
+
+- (NSArray *)allKeys {
+    return [_realDictionary allKeys];
+}
+- (NSArray *)allValues {
+    return [_realDictionary allValues];
 }
 
 @end

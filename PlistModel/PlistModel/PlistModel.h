@@ -107,4 +107,12 @@
 - (id)objectForKey:(id)aKey;
 - (NSEnumerator *)keyEnumerator;
 
+// Enumeration
+- (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block;
+- (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(id key, id obj, BOOL *stop))block;
+
+// Keys and Values
+- (NSArray *)allKeys;
+- (NSArray *)allValues;
+
 @end
