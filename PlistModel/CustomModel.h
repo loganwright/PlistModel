@@ -10,10 +10,10 @@
 
 @interface CustomModel : PlistModel
 
-@property (strong, nonatomic) NSString * StringPropertyKey;
-@property (strong, nonatomic) NSDate * DatePropertyKey;
-@property (strong, nonatomic) NSArray * ArrayPropertyKey;
-@property (strong, nonatomic) NSDictionary * DictionaryPropertyKey;
+@property (strong, nonatomic) NSString * stringPropertyKey;
+@property (strong, nonatomic) NSDate * datePropertyKey;
+@property (strong, nonatomic) NSArray * arrayPropertyKey;
+@property (strong, nonatomic) NSDictionary * dictionaryPropertyKey;
 
 @property int IntPropertyKey;
 @property BOOL BoolPropertyKey;
