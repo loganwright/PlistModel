@@ -34,36 +34,39 @@
         
     }];
     
-    // Custom Subclassed Model With Plist File Included In Xcode Project
-    [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
-        
-        NSLog(@"Printing: PlistIncluded - CustomModel \n\n");
-        CustomModel * customModel = (CustomModel *)plistModel;
-        NSLog(@"PlistIncluded - StringProperty: %@", customModel.StringPropertyKey);
-        NSLog(@"PlistIncluded - DateProperty: %@", customModel.DatePropertyKey);
-        NSLog(@"PlistIncluded - ArrayProperty: %@", customModel.ArrayPropertyKey);
-        NSLog(@"PlistIncluded - DictionaryProperty: %@", customModel.DictionaryPropertyKey);
-        NSLog(@"PlistIncluded - IntProperty: %i", customModel.IntPropertyKey);
-        NSLog(@"PlistIncluded - BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
-        NSLog(@"PlistIncluded - FloatProperty: %f", customModel.FloatPropertyKey);
-        NSLog(@"\n");
-        
-    }];
+     // Custom Subclassed Model With Plist File Included In Xcode Project
+     [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
+     
+     NSLog(@"Printing: PlistIncluded - CustomModel \n\n");
+     CustomModel * customModel = (CustomModel *)plistModel;
+     NSLog(@"PlistIncluded - StringProperty: %@", customModel.StringPropertyKey);
+     NSLog(@"PlistIncluded - DateProperty: %@", customModel.DatePropertyKey);
+     NSLog(@"PlistIncluded - ArrayProperty: %@", customModel.ArrayPropertyKey);
+     NSLog(@"PlistIncluded - DictionaryProperty: %@", customModel.DictionaryPropertyKey);
+     NSLog(@"PlistIncluded - IntProperty: %i", customModel.IntPropertyKey);
+     NSLog(@"PlistIncluded - BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
+     NSLog(@"PlistIncluded - FloatProperty: %f", customModel.FloatPropertyKey);
+     NSLog(@"\n");
+     
+     }];
     
     // Custom Subclassed Model With Plist Created Dynamically
     [CustomModel plistNamed:@"DynamicallyCreatedList" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
-        NSLog(@"Printing: Dynamic - CustomModel (1st run will be nil because it hasn't been created yet) \n\n");
-        CustomModel * customModel = (CustomModel *)plistModel;
-        NSLog(@"Dynamic - StringProperty: %@", customModel.StringPropertyKey);
-        NSLog(@"Dynamic - DateProperty: %@", customModel.DatePropertyKey);
-        NSLog(@"Dynamic - ArrayProperty: %@", customModel.ArrayPropertyKey);
-        NSLog(@"Dynamic - DictionaryProperty: %@", customModel.DictionaryPropertyKey);
-        NSLog(@"Dynamic - IntProperty: %i", customModel.IntPropertyKey);
-        NSLog(@"Dynamic - BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
-        NSLog(@"Dynamic - FloatProperty: %f", customModel.FloatPropertyKey);
-        NSLog(@"\n");
         
+         NSLog(@"Printing: Dynamic - CustomModel (1st run will be nil because it hasn't been created yet) \n\n");
+         CustomModel * customModel = (CustomModel *)plistModel;
+         NSLog(@"Dynamic - StringProperty: %@", customModel.StringPropertyKey);
+         NSLog(@"Dynamic - DateProperty: %@", customModel.DatePropertyKey);
+         NSLog(@"Dynamic - ArrayProperty: %@", customModel.ArrayPropertyKey);
+         NSLog(@"Dynamic - DictionaryProperty: %@", customModel.DictionaryPropertyKey);
+         NSLog(@"Dynamic - IntProperty: %i", customModel.IntPropertyKey);
+         NSLog(@"Dynamic - BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
+         NSLog(@"Dynamic - FloatProperty: %f", customModel.FloatPropertyKey);
+         NSLog(@"\n");
+        
+        //
+        CustomModel * customModel = (CustomModel *)plistModel;
         // Set our values
         customModel.StringPropertyKey = @"Hello World!";
         customModel.DatePropertyKey = [NSDate date];
@@ -72,6 +75,16 @@
         customModel.IntPropertyKey = 7654321;
         customModel.BoolPropertyKey = YES;
         customModel.FloatPropertyKey = 636.859497;
+        
+        
+        customModel[@"secretKey"] = @"someSecret";
+        customModel[@"stringPropertyKey"] = @"blahblahblah";
+        customModel.StringPropertyKey = @"Some Other Hello World";
+        
+        NSLog(@"Is It Dirty? %@", customModel.isDirty ? @"YES" : @"NO");
+        [customModel saveInBackgroundWithCompletion:^{
+            NSLog(@"Is Dirty After? %@", customModel.isDirty ? @"YES" : @"NO");
+        }];
         
     }];
     

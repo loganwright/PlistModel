@@ -18,6 +18,9 @@
 @property (strong, nonatomic) NSMutableSet * observingKeyPaths;
 @property BOOL isDealloc;
 
+// BundledPlists are immutable
+@property BOOL isBundledPlist;
+
 @end
 
 @implementation PlistModel
@@ -111,7 +114,10 @@
     // Check to see if there's a Plist included in the main bundle
     NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
     
-    if (!path) {
+    if (path) {
+        _isBundledPlist = YES;
+    }
+    else {
         
         // There isn't already a plist, make one
         NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
@@ -128,7 +134,7 @@
     
     // Return
     return plist;
-
+    
 }
 
 #pragma mark GET OUR PROPERTY NAMES
@@ -150,16 +156,16 @@
         // INJECTION
         NSString *stringName = [NSString stringWithUTF8String:name];
         NSLog(@"EvalSTring: %@", stringName);
-        if ([@[@"realDictionary", @"plistName", @"observingKeyPaths", @"isDirty", @"isDealloc"]containsObject:stringName]) {
+        if ([@[@"realDictionary", @"plistName", @"observingKeyPaths", @"isDirty", @"isDealloc", @"isBundledPlist"]containsObject:stringName]) {
             // Block these properties
             continue;
         }
         /* Removing in updated version
-        if ([stringName isEqualToString:@"realDictionary"] || [stringName isEqualToString:@"plistName"] || [stringName isEqualToString:@"observingKeyPaths"] || [stringName isEqualToString:@"isDirty"] || [stringName isEqualToString:@"isDealloc"]) {
-            NSLog(@"IS EQUAL TO PROPERTY LIST %@", stringName);
-            // Block these properties
-            continue;
-        }*/
+         if ([stringName isEqualToString:@"realDictionary"] || [stringName isEqualToString:@"plistName"] || [stringName isEqualToString:@"observingKeyPaths"] || [stringName isEqualToString:@"isDirty"] || [stringName isEqualToString:@"isDealloc"]) {
+         NSLog(@"IS EQUAL TO PROPERTY LIST %@", stringName);
+         // Block these properties
+         continue;
+         }*/
         const char * attributes = property_getAttributes(property);
         // NSLog(@"Attributes: %s", attributes);
         NSString * attributeString = [NSString stringWithUTF8String:attributes];
@@ -191,44 +197,48 @@
     // Save
     // Set to YES on dealloc so we can remove all KVO observers
     _isDealloc = YES;
-    [self saveInBackgroundWithCompletion:nil];
+    
+    
+    if (!_isBundledPlist) {
+        [self saveInBackgroundWithCompletion:nil];
+    }
     
 }
 
 - (void) saveInBackgroundWithCompletion:(void(^)(void))completion {
-/*
-    // So we don't have to check it every time
-    BOOL isInfo = [_plistName isEqualToString:@"Info"];
-    
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
-        
-        // INJECTION
-        // Block our instance properties from setting to plist
-        // Possibly unneccessary since they are blocked in `getPropertyNames`
-        if ([propertyName isEqualToString:@"realDictionary"] || [propertyName isEqualToString:@"plistName"] || [propertyName isEqualToString:@"observingKeyPaths"] || [propertyName isEqualToString:@"isDirty"]) {
-            // Block these properties
-            continue;
-        }
-        
-        // Check if we're using an Info.plist model
-        if (!isInfo) {
-            // If not Info.plist, don't set this variable.  The other properties won't be set, but because it's a BOOL, it will set a default 0;
-            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
-            }
-        }
-        
-        // Make sure our dictionary is set to show any updated properties
-        [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
-*/
+    /*
+     // So we don't have to check it every time
+     BOOL isInfo = [_plistName isEqualToString:@"Info"];
+     
+     // Set our properties to the dictionary before we write it
+     for (NSString * propertyName in [self getPropertyNames]) {
+     
+     // INJECTION
+     // Block our instance properties from setting to plist
+     // Possibly unneccessary since they are blocked in `getPropertyNames`
+     if ([propertyName isEqualToString:@"realDictionary"] || [propertyName isEqualToString:@"plistName"] || [propertyName isEqualToString:@"observingKeyPaths"] || [propertyName isEqualToString:@"isDirty"]) {
+     // Block these properties
+     continue;
+     }
+     
+     // Check if we're using an Info.plist model
+     if (!isInfo) {
+     // If not Info.plist, don't set this variable.  The other properties won't be set, but because it's a BOOL, it will set a default 0;
+     if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
+     continue;
+     }
+     }
+     
+     // Make sure our dictionary is set to show any updated properties
+     [self setDictionaryValueFromPropertyWithName:propertyName];
+     }
+     */
     // INJECTION BEGIN
     
     // remove all observers
     
     //[_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
-      //  [_realDictionary removeObserver:self forKeyPath:keyPath];
+    //  [_realDictionary removeObserver:self forKeyPath:keyPath];
     //}];
     
     // So we don't have to check it every time
@@ -259,8 +269,7 @@
     
     // INJECTION BEGIN
     
-    // remove all observers
-    
+    // remove all observers if deallocating, otherwise, keep observing!
     if (_isDealloc) {
         [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
             [_realDictionary removeObserver:self forKeyPath:keyPath];
@@ -313,7 +322,7 @@
                     completion();
                 });
             }
-             
+            
         });
     }
     else {
@@ -512,7 +521,7 @@
                 func(self, propertySetterSelector, 0);
             }
         }
-
+        
     }
     
 }
@@ -522,7 +531,7 @@
 - (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey {
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
-
+        
         // INJECTION BEGIN
         // We must observe this key if we aren't already! Before we set it, so KVO triggers
         if ([_observingKeyPaths containsObject:aKey]) {
@@ -561,15 +570,15 @@
          If it is observing a keypath, so be it, just leave it open and close them all in dealloc
          */
         /*
-        NSLog(@"Checking: %@", aKey);
-        if ([_observingKeyPaths containsObject:aKey]) {
-            NSLog(@"Already observing!");
-        }
-        else {
-            NSLog(@"Not yet observing!");
-            [_observingKeyPaths addObject:aKey];
-            [_realDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
-        }*/
+         NSLog(@"Checking: %@", aKey);
+         if ([_observingKeyPaths containsObject:aKey]) {
+         NSLog(@"Already observing!");
+         }
+         else {
+         NSLog(@"Not yet observing!");
+         [_observingKeyPaths addObject:aKey];
+         [_realDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+         }*/
         // INJECTION END
         
         // Update our property -- Just to keep everything synced
