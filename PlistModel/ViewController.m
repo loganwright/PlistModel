@@ -26,12 +26,10 @@
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        dynamicModel.name = @"A much, MUCH fancier new name";
+        dynamicModel.name = @"A new name";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         NSLog(@"DynamicModel: %@", dynamicModel);
     }];
-    
-    NSLog(@"DictClass: %@", [@{} class]);
     
 }
 
