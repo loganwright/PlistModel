@@ -619,8 +619,8 @@
 #pragma mark DESCRIPTION
 
 - (NSString *) description {
-    NSLog(@"Description called");
-    
+    ///// ***** NOT WORKING FOR SOME UNKNOWN REASON ****** //
+    NSLog(@"WillDescribePlistModel");
     /*
      We run the following code to update the dictionary so that the natural description prints updated values in case properties have been set.  Helps w/ debugging.
      */

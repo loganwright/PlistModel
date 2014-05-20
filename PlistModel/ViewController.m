@@ -93,41 +93,16 @@
         
     }];
      */
+    
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel: %@", dynamicModel);
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        //dynamicModel[@"name"] = @"fancyPants";
-        dynamicModel.name = @"Superasdfblerizer";
+        dynamicModel.name = @"barfoodlerizer supremely";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        NSLog(@"DynamicModel.string = %@", dynamicModel.StringPropertyKey);
-        dynamicModel.StringPropertyKey = @"Fancy sassy Property";
-        NSLog(@"DynamicModel.string = %@", dynamicModel.StringPropertyKey);
-        //[dynamicModel saveInBackgroundWithCompletion:^{
-          //NSLog(@"Saved");
-        //sdf}];
-        //dynamicModel.mutableArray = [NSMutableArray array];
-        //[dynamicModel.mutableArray addObjectsFromArray:@[@"Hi", @"hello", @"globe", @"world"]];
         NSLog(@"DynamicModel: %@", dynamicModel);
+        NSLog(@"DynamicModel.description: %@", dynamicModel.description);
     }];
-    /*
-    [DynamicModel plistNamed:@"DynamicModelNumberTwo" inBackgroundWithBlock:^(PlistModel *plistModel) {
-        DynamicModel * dynamicModel = (DynamicModel *)plistModel;
-        NSLog(@"DynamicModel2: %@", dynamicModel);
-        NSLog(@"DynamicModel2.name = %@", dynamicModel.name);
-        //dynamicModel[@"name"] = @"fancyPants";
-        dynamicModel.name = @"2Superb";
-        NSLog(@"DynamicModel2.2name = %@", dynamicModel.name);
-        NSLog(@"DynamicModel2.2string = %@", dynamicModel.StringPropertyKey);
-        dynamicModel.StringPropertyKey = @"2Fancy String Property";
-        NSLog(@"DynamicModel2.string = %@", dynamicModel.StringPropertyKey);
-        //[dynamicModel saveInBackgroundWithCompletion:^{
-        //  NSLog(@"Saved");
-        //}];
-        //dynamicModel.mutableArray = [NSMutableArray array];
-        //[dynamicModel.mutableArray addObjectsFromArray:@[@"Hi", @"hello", @"globe", @"world"]];
-        NSLog(@"DynamicModel2: %@", dynamicModel);
-    }];*/
     
 }
 
@@ -136,5 +111,4 @@
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
-
 @end
