@@ -99,4 +99,12 @@
  */
 @property (strong, nonatomic) NSArray * UILaunchImages;
 
+#pragma mark FOR INTERACTING WITH CLASS LIKE NSMUTABLEDICTIONARY
+
+- (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey;
+- (void) removeObjectForKey:(id)aKey;
+- (NSUInteger) count;
+- (id)objectForKey:(id)aKey;
+- (NSEnumerator *)keyEnumerator;
+
 @end

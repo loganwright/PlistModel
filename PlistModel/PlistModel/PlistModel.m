@@ -514,7 +514,7 @@
     }
 }
 
-#pragma mark NSMutableDictionary Subclass OverRides -- NECESSARY!
+#pragma mark NSMutableDictionary Subclass Like Interaction -- NECESSARY!
 
 - (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey {
     
