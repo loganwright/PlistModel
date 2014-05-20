@@ -377,37 +377,43 @@
         // Set our implementation
         IMP imp = [self methodForSelector:propertyGetterSelector];
         
+        // Get object to set
+        id objectToSet;
+        
         // Set to property
         if (strcmp(returnType, @encode(id)) == 0) {
             //NSLog(@"Is Object");
             id (*func)(id, SEL) = (void *)imp;
-            id object = func(self, propertyGetterSelector);
-            if (object) {
-                self[propertyName] = object;
-            }
-            else {
-                [self removeObjectForKey:propertyName];
-            }
+            objectToSet = func(self, propertyGetterSelector);
         }
         else if (strcmp(returnType, @encode(BOOL)) == 0) {
             //NSLog(@"Is Bool");
             BOOL (*func)(id, SEL) = (void *)imp;
-            self[propertyName] = @(func(self, propertyGetterSelector));
+            objectToSet = @(func(self, propertyGetterSelector));
         }
         else if (strcmp(returnType, @encode(int)) == 0) {
             //NSLog(@"Is Int");
             int (*func)(id, SEL) = (void *)imp;
-            self[propertyName] = @(func(self, propertyGetterSelector));
+            objectToSet = @(func(self, propertyGetterSelector));
         }
         else if (strcmp(returnType, @encode(float)) == 0) {
             //NSLog(@"Is Float");
             float (*func)(id, SEL) = (void *)imp;
-            self[propertyName] = @(func(self, propertyGetterSelector));
+            objectToSet = @(func(self, propertyGetterSelector));
+            
         }
         else if (strcmp(returnType, @encode(double)) == 0) {
             //NSLog(@"Is Double");
             double (*func)(id, SEL) = (void *)imp;
-            self[propertyName] = @(func(self, propertyGetterSelector));
+            objectToSet = @(func(self, propertyGetterSelector));
+        }
+        
+        if (objectToSet) {
+            // self[propertyName] = object;
+            [self setObject:objectToSet forKey:propertyName];
+        }
+        else {
+            [self removeObjectForKey:propertyName];
         }
     }
 }
@@ -638,7 +644,7 @@
         [self setDictionaryValueFromPropertyWithName:propertyName];
     }
     
-    return [super description];
+    return [_realDictionary description];
 }
 
 @end

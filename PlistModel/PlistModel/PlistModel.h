@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@interface PlistModel : NSMutableDictionary
+@interface PlistModel : NSObject
 
 #pragma mark CURRENT DIRTY / CLEAN STATUS
 
