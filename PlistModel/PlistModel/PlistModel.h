@@ -15,7 +15,7 @@
 /*!
  Checks whether or not the current PlistModel has changed
  */
-@property (atomic, readonly) BOOL isDirty;
+@property (nonatomic, readonly) BOOL isDirty;
 
 #pragma mark CALL SAVE EXPLICITLY
 

@@ -24,6 +24,7 @@
 		801E13CA191214CC00F282BA /* PlistModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13C9191214CC00F282BA /* PlistModel.m */; };
 		801E13D5191216DB00F282BA /* CustomModel.plist in Resources */ = {isa = PBXBuildFile; fileRef = 801E13D4191216DB00F282BA /* CustomModel.plist */; };
 		801E13D819121A2600F282BA /* CustomModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13D719121A2600F282BA /* CustomModel.m */; };
+		80AAF3F2192AFBAF00C4FA0C /* DynamicModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,8 @@
 		801E13D4191216DB00F282BA /* CustomModel.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = CustomModel.plist; sourceTree = "<group>"; };
 		801E13D619121A2600F282BA /* CustomModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomModel.h; sourceTree = "<group>"; };
 		801E13D719121A2600F282BA /* CustomModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomModel.m; sourceTree = "<group>"; };
+		80AAF3F0192AFBAF00C4FA0C /* DynamicModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicModel.h; sourceTree = "<group>"; };
+		80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DynamicModel.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -122,6 +125,7 @@
 			children = (
 				801E13C7191214CC00F282BA /* PlistModel */,
 				801E13CB1912154E00F282BA /* CustomModel */,
+				80AAF3EF192AFB1B00C4FA0C /* DynamicModel */,
 				801E13A11912146700F282BA /* AppDelegate.h */,
 				801E13A21912146700F282BA /* AppDelegate.m */,
 				801E13A41912146700F282BA /* Main.storyboard */,
@@ -179,6 +183,15 @@
 				801E13D4191216DB00F282BA /* CustomModel.plist */,
 			);
 			name = CustomModel;
+			sourceTree = "<group>";
+		};
+		80AAF3EF192AFB1B00C4FA0C /* DynamicModel */ = {
+			isa = PBXGroup;
+			children = (
+				80AAF3F0192AFBAF00C4FA0C /* DynamicModel.h */,
+				80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */,
+			);
+			name = DynamicModel;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -280,6 +293,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				801E13CA191214CC00F282BA /* PlistModel.m in Sources */,
+				80AAF3F2192AFBAF00C4FA0C /* DynamicModel.m in Sources */,
 				801E13A91912146700F282BA /* ViewController.m in Sources */,
 				801E13A31912146700F282BA /* AppDelegate.m in Sources */,
 				801E13D819121A2600F282BA /* CustomModel.m in Sources */,
@@ -488,6 +502,7 @@
 				801E13C31912146800F282BA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		801E13C41912146800F282BA /* Build configuration list for PBXNativeTarget "PlistModelTests" */ = {
 			isa = XCConfigurationList;
@@ -496,6 +511,7 @@
 				801E13C61912146800F282BA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
