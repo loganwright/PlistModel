@@ -89,10 +89,10 @@ To allow properties to align to the dictionary case insensitive, we will store p
         [self configurePropertyKeys];
         
         // Step 3: Fetch PLIST & set to our backing dictionary
-        _realDictionary = [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
+        _realDictionary = [self getPlist];// [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
         
         // Step 4: Find properties that exist in plist
-        NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:[self getPropertyNames]];
+        NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:_propertyKeys.allKeys];
         NSSet * allKeys = [NSSet setWithArray:_realDictionary.allKeys];
         [propertiesInPlist intersectSet:allKeys];
         
@@ -187,47 +187,17 @@ To allow properties to align to the dictionary case insensitive, we will store p
     free(properties);
 }
 
-#pragma mark PLIST FETCH
-
 - (NSMutableDictionary *) getPlist {
     
     // Check to see if there's a Plist included in the main bundle
     NSString * path = _plistPath;
-    /*
-    NSString *path = [[NSBundle mainBundle] pathForResource:_plistName ofType: @"plist"];
     
-    if (path) {
-        NSLog(@"%@ isBundling %@", NSStringFromClass(self.class), self.plistName);
-        _isBundledPlist = YES;
-    }
-    else {
-        
-        // There isn't already a plist, make one
-        NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
-        
-        // Fetch out plist & set to new path
-        NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [pathArray objectAtIndex:0];
-        path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
-        
-    }
-    */
-    
-    // If it doesn't exist, create it
+    // Get Plist
     NSMutableDictionary * plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
     
-    // Return
-    return plist;
+    // Return -- If null, return empty, do not return null
+    return (plist) ? plist : [NSMutableDictionary dictionary];
     
-}
-
-#pragma mark GET OUR PROPERTY NAMES
-
-- (NSMutableArray *) getPropertyNames {
-    
-    // The keys are all the propertynames
-    return [_propertyKeys.allKeys mutableCopy];
-
 }
 
 #pragma mark SYNC
@@ -238,7 +208,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
     BOOL isInfo = [_plistName isEqualToString:@"Info"];
     
     // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
+    for (NSString * propertyName in _propertyKeys.allKeys) {
         
         // Check if we're using an Info.plist model
         if (!isInfo) {
