@@ -256,29 +256,15 @@ To allow properties to align to the dictionary case insensitive, we will store p
     }
     else {
         
-        // So we don't have to check it every time
-        BOOL isInfo = [_plistName isEqualToString:@"Info"];
-        
-        // Set our properties to the dictionary before we write it
-        for (NSString * propertyName in [self getPropertyNames]) {
-            
-            // Check if we're using an Info.plist model
-            if (!isInfo) {
-                // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
-                if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                    continue;
-                }
-            }
-            
-            // Make sure our dictionary is set to latest property value
-            [self setDictionaryValueFromPropertyWithName:propertyName];
-        }
+        // Update Dictionary Before We Compare Dirty (WILL SET VIA KVO)
+        [self synchronizePropertiesToDictionary];
         
         // AFTER setting objects to dictionary from properties so we can know if dirty
         [self removeKVO];
         
         // Save
         if (_isDirty) {
+            NSLog(@"Saving ... Dirty");
             [self writeDictionaryInBackground:_realDictionary toPath:_plistPath withCompletion:nil];
         }
         else {
@@ -297,7 +283,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
 - (void) writeDictionaryInBackground:(NSDictionary *)dictionary toPath:(NSString *)path withCompletion:(void(^)(void))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
         
-        NSLog(@"Saving NEW .......... dealloc");
+        NSLog(@"Saving NEW ..........");
         [dictionary writeToFile:path atomically:YES];
         
         if (completion) {
@@ -317,28 +303,14 @@ To allow properties to align to the dictionary case insensitive, we will store p
     // Bundled Plists are immutable, don't save (on real devices)
     if (_isBundledPlist) {
         if (completion) {
-            NSLog(@"Bundled Plists are Immutable on Real Device");
+            NSLog(@"Bundled Plists are immutable on a RealDevice, New values will not save!");
+            completion();
         }
         return;
     }
     
-    // So we don't have to check it every time
-    BOOL isInfo = [_plistName isEqualToString:@"Info"];
-    
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
-        
-        // Check if we're using an Info.plist model
-        if (!isInfo) {
-            // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
-            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
-            }
-        }
-        
-        // Make sure our dictionary is set to latest property value
-        [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
+    // Update dictionary to reflect values set via properties.  Will set _isDirty via KVO
+    [self synchronizePropertiesToDictionary];
     
     // Save if dirty
     if (_isDirty) {
@@ -351,21 +323,6 @@ To allow properties to align to the dictionary case insensitive, we will store p
             
             if (strongSelf) {
                 
-                /*
-                NSString *path = [[NSBundle mainBundle] pathForResource:strongSelf.plistName ofType: @"plist"];
-                
-                if (!path) {
-                    
-                    // There isn't already a plist, make one
-                    NSString * plistName = [NSString stringWithFormat:@"%@.plist", strongSelf.plistName];
-                    
-                    // Fetch out plist
-                    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-                    NSString *documentsDirectory = [paths objectAtIndex:0];
-                    path = [documentsDirectory stringByAppendingPathComponent:plistName];
-                }
-                */
-                
                 // Get Path
                 NSString *path = _plistPath;
                 
@@ -375,20 +332,14 @@ To allow properties to align to the dictionary case insensitive, we will store p
                 // Reset dirty - We need to access directly because of readOnly status
                 strongSelf->_isDirty = NO;
                 
-                // Run completion
+                // Write and run completion
                 [strongSelf writeDictionaryInBackground:strongSelf.realDictionary toPath:strongSelf.plistPath withCompletion:completion];
-                /*
-                if (completion) {
-                    dispatch_sync(dispatch_get_main_queue(), ^{
-                        completion();
-                    });
-                }
-                 */
+
             }
         });
     }
-    // Object is clean, run completion if it exists
     else if (completion) {
+        // Object is clean, run completion if it exists
         completion();
     }
     else {
@@ -668,61 +619,25 @@ To allow properties to align to the dictionary case insensitive, we will store p
 
 - (BOOL) isDirty {
     
-    // Bundled Plists are immutable, don't save (on real devices), so, ALWAYS clean
-    if (_isBundledPlist) {
-        return NO;
-    }
+    /*
+     Within self always use _isDirty or self->isDirty.  This method is only for external access if the user wants to check if Dirty
+     */
     
-    // So we don't have to check it every time
-    BOOL isInfo = [_plistName isEqualToString:@"Info"];
+    // Will update dictionary to current values (KVO WILL TRIGGER _isDirty)
+    [self synchronizePropertiesToDictionary];
     
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
-        
-        // Check if we're using an Info.plist model
-        if (!isInfo) {
-            // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
-            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
-            }
-        }
-        
-        // Make sure our dictionary is set to latest property value
-        [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
-    
-    // Updating our dictionary to reflect our properties will trigger _isDirty in KVO
-    
+    // Set when synchronized
     return _isDirty;
 }
 
 #pragma mark DESCRIPTION
 
 - (NSString *) description {
-    ///// ***** NOT WORKING FOR SOME UNKNOWN REASON ****** //
-    NSLog(@"WillDescribePlistModel");
-    /*
-     We run the following code to update the dictionary so that the natural description prints updated values in case properties have been set.  Helps w/ debugging.
-     */
     
-    // So we don't have to check it every time
-    BOOL isInfo = [_plistName isEqualToString:@"Info"];
+    // Sync our properties so it will print the appropriate values
+    [self synchronizePropertiesToDictionary];
     
-    // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in [self getPropertyNames]) {
-        
-        // Check if we're using an Info.plist model
-        if (!isInfo) {
-            // If not Info.plist, don't set this variable.  The other properties won't be set because the can be null, but because it's a BOOL, it will set a default 0 and show NO.  This means that any custom plist will have this property added;
-            if ([propertyName isEqualToString:@"LSRequiresIPhoneOS"]) {
-                continue;
-            }
-        }
-        
-        // Make sure our dictionary is set to latest property value
-        [self setDictionaryValueFromPropertyWithName:propertyName];
-    }
-    
+    // Print dictionary
     return [_realDictionary description];
 }
 

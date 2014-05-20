@@ -22,7 +22,7 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-
+    BOOL save = YES;
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
@@ -31,9 +31,12 @@
         dynamicModel.counter++;
         NSLog(@"Counter: %i", dynamicModel.counter);
         NSLog(@"DynamicModel: %@", dynamicModel);
-        [dynamicModel saveInBackgroundWithCompletion:^{
-            NSLog(@"SAVED");
-        }];
+        
+        if (save) {
+            [dynamicModel saveInBackgroundWithCompletion:^{
+                NSLog(@"SAVED");
+            }];
+        }
     }];
     
 }
