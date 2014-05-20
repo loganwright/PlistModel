@@ -39,6 +39,24 @@
         }
     }];
     
+    [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
+        
+        // Get our custom model from return block
+        CustomModel * customModel = (CustomModel *)plistModel;
+        
+        //NSLog(@"\n");
+        NSLog(@"** CustomModel.plist **");
+        NSLog(@"CM:StringProperty: %@", customModel.stringPropertyKey);
+        NSLog(@"CM:DateProperty: %@", customModel.DatePropertyKey);
+        NSLog(@"CM:ArrayProperty: %@", customModel.ArrayPropertyKey);
+        NSLog(@"CM:DictionaryProperty: %@", customModel.DictionaryPropertyKey);
+        NSLog(@"CM:IntProperty: %i", customModel.IntPropertyKey);
+        NSLog(@"CM:BoolProperty: %@", customModel.BoolPropertyKey ? @"YES" : @"NO");
+        NSLog(@"CM:FloatProperty: %f", customModel.FloatPropertyKey); 
+        NSLog(@"\n");
+        
+    }];
+    
 }
 
 - (void)didReceiveMemoryWarning

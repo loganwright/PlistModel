@@ -79,41 +79,46 @@ To allow properties to align to the dictionary case insensitive, we will store p
     self = [super init];
     if (self) {
         
+        /*
+         MUST BE EXECUTED IN THIS ORDER!
+         */
+        
         // Step 1: Establish out plistName
         _plistName = plistName;
         
         // Step 2: Set our Path
         [self configurePath];
         
-        // Step 3: Set our propertyKeys dictionary
+        // Step 3: Set our properties as Keys in _propertyKeys
         [self configurePropertyKeys];
         
-        // Step 3: Fetch PLIST & set to our backing dictionary
-        _realDictionary = [self getPlist];// [NSMutableDictionary dictionaryWithDictionary:[self getPlist]];
+        // Step 4: Fetch PLIST & set to our backing dictionary
+        [self configureRealDictionary];
         
-        // Step 4: Find properties that exist in plist
-        NSMutableSet * propertiesInPlist = [NSMutableSet setWithArray:_propertyKeys.allKeys];
-        NSSet * allKeys = [NSSet setWithArray:_realDictionary.allKeys];
-        [propertiesInPlist intersectSet:allKeys];
-        
+        // Step 5: Set Properties from PlistDictionary (_realDictionary) & populate corresponding dictionaryKeys with their property in _propertyKeys
+        [self populateProperties];
         // Step 5: Start observing
+        
         /*
-         We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a change.  We must add KVO observers in `setObject` and remove observers in `removeObject`
+         We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a core change before saving.  We must add KVO observers in `setObject` to assure interaction w/ keys is not overlooked
          */
         // getPlist(above) will set _isBundledPlist property, should be set at this point
-        if (_isBundledPlist) {
-            _observingKeyPaths = [NSMutableSet setWithSet:allKeys];
+        if (!_isBundledPlist) {
+            NSLog(@"Observing!");
+            _observingKeyPaths = [NSMutableSet setWithArray:_realDictionary.allKeys];
             [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
                 [_realDictionary addObserver:self forKeyPath:keyPath options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
             }];
         }
         
+        /*
         // Step 6: Set properties to values from plist
         [propertiesInPlist enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
             
             [self setPropertyFromDictionaryValueWithName:propertyName];
             
         }];
+         */
     }
     return self;
 }
@@ -187,8 +192,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
     free(properties);
 }
 
-- (NSMutableDictionary *) getPlist {
-    
+- (void) configureRealDictionary {
     // Check to see if there's a Plist included in the main bundle
     NSString * path = _plistPath;
     
@@ -196,8 +200,29 @@ To allow properties to align to the dictionary case insensitive, we will store p
     NSMutableDictionary * plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
     
     // Return -- If null, return empty, do not return null
-    return (plist) ? plist : [NSMutableDictionary dictionary];
-    
+    _realDictionary = (plist) ? plist : [NSMutableDictionary dictionary];
+}
+
+- (void) populateProperties {
+    NSSet *allPlistKeysSet = [NSSet setWithArray:_realDictionary.allKeys];
+    NSSet *allPropertiesSet = [NSSet setWithArray:_propertyKeys.allKeys];
+    [allPropertiesSet enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
+        
+        NSSet * dictKeys = [allPlistKeysSet objectsPassingTest:^BOOL(NSString * key, BOOL *stop) {
+            BOOL didPass = NO;
+            if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
+                didPass = YES;
+                *stop = YES;
+            }
+            return didPass;
+        }];
+        if (dictKeys.count > 0) {
+            _propertyKeys[propertyName] = [dictKeys anyObject];
+        }
+        
+        // Set after setting corresponding value in _propertyKeys
+        [self setPropertyFromDictionaryValueWithName:propertyName];
+    }];
 }
 
 #pragma mark SYNC
@@ -431,20 +456,36 @@ To allow properties to align to the dictionary case insensitive, we will store p
 
 - (void) setPropertyFromDictionaryValueWithName:(NSString *)propertyName {
     
+    // Default
+    __block NSString * dictionaryKey = propertyName;
+    
+    // If propertyName isn't contained, double check to see if key exists case insensitive
+    if (!_realDictionary[propertyName]) {
+        /*
+         If dictionary value doesn't exist, do case insensitive to check for correctKey
+         */
+        [_realDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
+            if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
+                dictionaryKey = key;
+                *stop = YES;
+            }
+        }];
+        
+    }
+    
     // Get our setter from our string
-    SEL propertySetterSelector = [self setterSelectorForPropertyName:propertyName];
+    SEL propertySetterSelector = [self setterSelectorForPropertyName:dictionaryKey];
     
     // Make sure it exists as a property
     if ([self respondsToSelector:propertySetterSelector]) {
         
-        
-        if (_realDictionary[propertyName]) {
+        if (_realDictionary[dictionaryKey]) {
             
             // Index 0 is object, Index 1 is the selector: arguments start at Index 2
             const char * typeOfProperty = [self typeOfArgumentForSelector:propertySetterSelector atIndex:2];
             
             // Get object from our dictionary
-            id objectFromDictionaryForProperty = _realDictionary[propertyName];
+            id objectFromDictionaryForProperty = _realDictionary[dictionaryKey];
             
             // strcmp(str1, str2)
             // 0 if same
@@ -594,6 +635,8 @@ To allow properties to align to the dictionary case insensitive, we will store p
             _isDirty = YES;
         }
     }
+    
+    NSLog(@"KVO triggered: %@", _isDirty ? @"DIRTY" : @"CLEAN");
 }
 
 #pragma mark IS DIRTY GETTER
