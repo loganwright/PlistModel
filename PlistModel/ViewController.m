@@ -23,12 +23,32 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 
+    /*
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         dynamicModel.name = @"A new name";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         NSLog(@"DynamicModel: %@", dynamicModel);
+    }];
+    */
+    
+    [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
+        
+        // Get our custom model from return block
+        CustomModel * customModel = (CustomModel *)plistModel;
+        
+        NSLog(@"\n");
+        NSLog(@"** CustomModel.plist **");
+        NSLog(@"CM:StringProperty: %@", customModel.stringPropertyKey);
+        NSLog(@"CM:DateProperty: %@", customModel.datePropertyKey);
+        NSLog(@"CM:ArrayProperty: %@", customModel.arrayPropertyKey);
+        NSLog(@"CM:DictionaryProperty: %@", customModel.dictionaryPropertyKey);
+        NSLog(@"CM:IntProperty: %i", customModel.intPropertyKey);
+        NSLog(@"CM:BoolProperty: %@", customModel.boolPropertyKey ? @"YES" : @"NO");
+        NSLog(@"CM:FloatProperty: %f", customModel.floatPropertyKey);
+        NSLog(@"\n");
+        
     }];
     
 }
