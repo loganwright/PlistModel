@@ -99,7 +99,7 @@
     return self;
 }
 
-#pragma mark GET OUR PLIST
+#pragma mark PLIST FETCH
 
 - (NSMutableDictionary *) getPlist {
     
