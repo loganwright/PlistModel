@@ -25,6 +25,7 @@
 		801E13D5191216DB00F282BA /* CustomModel.plist in Resources */ = {isa = PBXBuildFile; fileRef = 801E13D4191216DB00F282BA /* CustomModel.plist */; };
 		801E13D819121A2600F282BA /* CustomModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 801E13D719121A2600F282BA /* CustomModel.m */; };
 		80AAF3F2192AFBAF00C4FA0C /* DynamicModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */; };
+		80AAF3F5192C312E00C4FA0C /* PlistExample.png in Resources */ = {isa = PBXBuildFile; fileRef = 80AAF3F4192C312E00C4FA0C /* PlistExample.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +65,7 @@
 		801E13D719121A2600F282BA /* CustomModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomModel.m; sourceTree = "<group>"; };
 		80AAF3F0192AFBAF00C4FA0C /* DynamicModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicModel.h; sourceTree = "<group>"; };
 		80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DynamicModel.m; sourceTree = "<group>"; };
+		80AAF3F4192C312E00C4FA0C /* PlistExample.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = PlistExample.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,6 +125,7 @@
 		801E13981912146700F282BA /* PlistModel */ = {
 			isa = PBXGroup;
 			children = (
+				80AAF3F3192C312E00C4FA0C /* Images */,
 				801E13C7191214CC00F282BA /* PlistModel */,
 				801E13CB1912154E00F282BA /* CustomModel */,
 				80AAF3EF192AFB1B00C4FA0C /* DynamicModel */,
@@ -192,6 +195,14 @@
 				80AAF3F1192AFBAF00C4FA0C /* DynamicModel.m */,
 			);
 			name = DynamicModel;
+			sourceTree = "<group>";
+		};
+		80AAF3F3192C312E00C4FA0C /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				80AAF3F4192C312E00C4FA0C /* PlistExample.png */,
+			);
+			path = Images;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -272,6 +283,7 @@
 			files = (
 				801E13D5191216DB00F282BA /* CustomModel.plist in Resources */,
 				801E13AB1912146700F282BA /* Images.xcassets in Resources */,
+				80AAF3F5192C312E00C4FA0C /* PlistExample.png in Resources */,
 				801E139D1912146700F282BA /* InfoPlist.strings in Resources */,
 				801E13A61912146700F282BA /* Main.storyboard in Resources */,
 			);
