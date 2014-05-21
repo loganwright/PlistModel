@@ -126,7 +126,7 @@ If no Plist already exists at the specified name, a new one will be created auto
 
 You can find more available properties in `PlistModel.h`
 
-##PlistModel with Dynamic Keys
+##Dynamic Keys
 
 You can also interact with PlistModel as if it is a mutableDictionary for keys that you might not know ahead of time and thus can't set as properties.  For these situations, you can use:
 
