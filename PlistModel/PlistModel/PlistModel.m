@@ -23,7 +23,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
  Value : ActualPropertyNameAsItAppearsInDictionary
 
  */
-@property (strong, nonatomic) NSMutableDictionary * propertyKeys;
+@property (strong, nonatomic) NSMutableArray * propertyNames;
 
 @property (strong, nonatomic) NSString * plistPath;
 
@@ -89,36 +89,29 @@ To allow properties to align to the dictionary case insensitive, we will store p
         // Step 2: Set our Path
         [self configurePath];
         
-        // Step 3: Set our properties as Keys in _propertyKeys
-        [self configurePropertyKeys];
+        // Step 3: Set our properties as Keys in _propertyNames
+        [self configurepropertyNames];
         
         // Step 4: Fetch PLIST & set to our backing dictionary
         [self configureRealDictionary];
         
-        // Step 5: Set Properties from PlistDictionary (_realDictionary) & populate corresponding dictionaryKeys with their property in _propertyKeys
+        // Step 5: Set Properties from PlistDictionary (_realDictionary) & populate corresponding dictionaryKeys with their property in _propertyNames
         [self populateProperties];
-        // Step 5: Start observing
         
+        // Step 6: Start observing
         /*
-         We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a core change before saving.  We must add KVO observers in `setObject` to assure interaction w/ keys is not overlooked
+         We will only observe _realDictionary because all properties are eventually updated in the dictionary.  In this way we can always know if there is a core change before saving.  We must add KVO observers in `setObject` to assure interaction w/ keys is not overlooked.
+         
+         getPlist(above) will set _isBundledPlist property, should be set at this point
          */
-        // getPlist(above) will set _isBundledPlist property, should be set at this point
         if (!_isBundledPlist) {
-            NSLog(@"Observing!");
+            // Don't observe bundled plists because they're immutable.  Dirty is irrelevant.
             _observingKeyPaths = [NSMutableSet setWithArray:_realDictionary.allKeys];
             [_observingKeyPaths enumerateObjectsUsingBlock:^(NSString * keyPath, BOOL *stop) {
                 [_realDictionary addObserver:self forKeyPath:keyPath options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
             }];
         }
         
-        /*
-        // Step 6: Set properties to values from plist
-        [propertiesInPlist enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
-            
-            [self setPropertyFromDictionaryValueWithName:propertyName];
-            
-        }];
-         */
     }
     return self;
 }
@@ -145,8 +138,8 @@ To allow properties to align to the dictionary case insensitive, we will store p
     _plistPath = path;
 }
 
-- (void) configurePropertyKeys {
-    _propertyKeys = [NSMutableDictionary dictionary];
+- (void) configurepropertyNames {
+    _propertyNames = [NSMutableArray array];
     
     // Fetch Properties
     unsigned count;
@@ -158,7 +151,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
                                        @"observingKeyPaths",
                                        @"isDirty",
                                        @"isBundledPlist",
-                                       @"propertyKeys",
+                                       @"propertyNames",
                                        @"plistPath"];
     
     // Parse Out Properties
@@ -184,7 +177,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
         }
         else {
             NSString * propertyName = [NSString stringWithUTF8String:name];
-            _propertyKeys[propertyName] = @""; // Just so it will save something
+            [_propertyNames addObject:propertyName];
         }
     }
     
@@ -204,23 +197,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
 }
 
 - (void) populateProperties {
-    NSSet *allPlistKeysSet = [NSSet setWithArray:_realDictionary.allKeys];
-    NSSet *allPropertiesSet = [NSSet setWithArray:_propertyKeys.allKeys];
-    [allPropertiesSet enumerateObjectsUsingBlock:^(NSString * propertyName, BOOL *stop) {
-        
-        NSSet * dictKeys = [allPlistKeysSet objectsPassingTest:^BOOL(NSString * key, BOOL *stop) {
-            BOOL didPass = NO;
-            if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
-                didPass = YES;
-                *stop = YES;
-            }
-            return didPass;
-        }];
-        if (dictKeys.count > 0) {
-            _propertyKeys[propertyName] = [dictKeys anyObject];
-        }
-        
-        // Set after setting corresponding value in _propertyKeys
+    [_propertyNames enumerateObjectsUsingBlock:^(NSString * propertyName, NSUInteger idx, BOOL *stop) {
         [self setPropertyFromDictionaryValueWithName:propertyName];
     }];
 }
@@ -233,7 +210,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
     BOOL isInfo = [_plistName isEqualToString:@"Info"];
     
     // Set our properties to the dictionary before we write it
-    for (NSString * propertyName in _propertyKeys.allKeys) {
+    for (NSString * propertyName in _propertyNames) {
         
         // Check if we're using an Info.plist model
         if (!isInfo) {
@@ -255,9 +232,8 @@ To allow properties to align to the dictionary case insensitive, we will store p
     
     NSLog(@"Dealloc");
 
-    // Bundled Plists are immutable, return
+    // Bundled Plists are immutable ... return
     if (_isBundledPlist) {
-        NSLog(@"Not Saving ... Bundled");
         return;
     }
     else {
@@ -270,11 +246,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
         
         // Save
         if (_isDirty) {
-            NSLog(@"Saving ... Dirty");
             [self writeDictionaryInBackground:_realDictionary toPath:_plistPath withCompletion:nil];
-        }
-        else {
-            NSLog(@"Not Saving ... Clean");
         }
     }
     
@@ -288,8 +260,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
 
 - (void) writeDictionaryInBackground:(NSDictionary *)dictionary toPath:(NSString *)path withCompletion:(void(^)(void))completion {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
-        
-        NSLog(@"Saving NEW ..........");
+    
         [dictionary writeToFile:path atomically:YES];
         
         if (completion) {
@@ -298,7 +269,7 @@ To allow properties to align to the dictionary case insensitive, we will store p
             });
         }
         else {
-            NSLog(@"No CompletionBlock");
+            // No completion block
         }
         
     });

@@ -26,7 +26,7 @@
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        dynamicModel.name = @"A new name";
+        dynamicModel.name = @"A new names";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         dynamicModel.counter++;
         NSLog(@"Counter: %i", dynamicModel.counter);
@@ -39,6 +39,7 @@
         }
     }];
     
+    /*
     [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
         // Get our custom model from return block
@@ -56,7 +57,7 @@
         NSLog(@"\n");
         
     }];
-    
+    */
 }
 
 - (void)didReceiveMemoryWarning
