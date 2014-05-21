@@ -3,7 +3,8 @@ PlistModel
 
 A Class For Easily Interacting With Plists as Objects via Automatically Set Properties
 
-<h3 align="center"> Version 1.0.0 Released 20 May 2014! </h3>
+<h3 align="center">Version 1.0.0</h3>
+<p align="center">Last Updated: 20 May 2014</p>
 
 ###What is it, and why do I need it?
 
