@@ -41,7 +41,6 @@
         
         // Get our custom model from return block
         CustomModel * customModel = (CustomModel *)plistModel;
-        
         NSLog(@"\n\n\n");
         NSLog(@"** CustomModel.plist **");
         NSLog(@"CM:StringProperty: %@", customModel.stringPropertyKey);
