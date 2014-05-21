@@ -264,6 +264,18 @@
     });
 }
 
+- (void) save {
+    
+    // Synchronize
+    [self synchronizePropertiesToDictionary];
+    
+    // Write
+    if (_isDirty) {
+        [_backingDictionary writeToFile:_plistPath atomically:YES];
+        _isDirty = NO;
+    }
+}
+
 - (void) saveInBackgroundWithCompletion:(void(^)(void))completion {
 
     // Bundled Plists are immutable, don't save (on real devices)

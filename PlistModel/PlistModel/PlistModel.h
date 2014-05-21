@@ -20,6 +20,10 @@
 #pragma mark CALL SAVE EXPLICITLY
 
 /*!
+ Save on main thread
+ */
+- (void) save;
+/*!
  Save is automatically called before being deallocated -- If you need to guarantee a save for whatever reason, you can call it here. 
  */
 - (void) saveInBackgroundWithCompletion:(void(^)(void))completion;
