@@ -389,7 +389,9 @@
     }
     
 }
-
+/*!
+ Set the dictionary value from the property value
+ */
 - (void) setDictionaryValueFromPropertyWithName:(NSString *)propertyName {
     
     SEL propertyGetterSelector = [self getterSelectorForPropertyName:propertyName];
@@ -560,6 +562,16 @@
     }
 }
 
+#pragma mark LITERALS SUPPORT
+
+- (id)objectForKeyedSubscript:(id)key {
+    return [self objectForKey:key];
+}
+
+- (void)setObject:(id)obj forKeyedSubscript:(id <NSCopying>)key {
+    [self setObject:obj forKey:key];
+}
+
 #pragma mark NSMutableDictionary Subclass Like Interaction -- NECESSARY!
 
 - (void) setObject:(id)anObject forKey:(id<NSCopying>)aKey {
@@ -618,7 +630,34 @@
 }
 
 - (id)objectForKey:(id)aKey {
-    return _backingDictionary[aKey];
+    
+    __block NSString *blockKey = aKey;
+    
+    // Check if key matches property, if it does, sync to property value. Properties take priority
+    [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
+        if ([propertyName caseInsensitiveCompare:aKey] == NSOrderedSame) {
+            // key matches property, must sync - Properties take priority
+            [self setDictionaryValueFromPropertyWithName:propertyName];
+            *stop = YES;
+        }
+    }];
+    
+    // If propertyName isn't contained, double check to see if key exists case insensitive
+    if (!_backingDictionary[blockKey]) {
+        /*
+         If dictionary value doesn't exist, do case insensitive to check for correctKey
+         */
+        [_backingDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
+            if ([key caseInsensitiveCompare:aKey] == NSOrderedSame) {
+                blockKey = key;
+                *stop = YES;
+            }
+        }];
+        
+    }
+    
+    // Return
+    return _backingDictionary[blockKey];
 }
 
 - (NSEnumerator *)keyEnumerator {

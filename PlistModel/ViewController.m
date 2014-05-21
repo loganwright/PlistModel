@@ -34,6 +34,9 @@
         dynamicModel.name = @"Hello World!";
         dynamicModel.counter++;
         NSLog(@"\n\n\n");
+        //dynamicModel[@"setter"] = @"Fancy";
+        
+        NSLog(@"DM: Name: %@ AND %@", dynamicModel[@"name"], dynamicModel[@"nAmE"]);
     }];
     
     // Loading Custom Plist From Bundle

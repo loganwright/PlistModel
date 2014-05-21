@@ -111,6 +111,10 @@
 - (id)objectForKey:(id)aKey;
 - (NSEnumerator *)keyEnumerator;
 
+// Literals Support
+- (id)objectForKeyedSubscript:(id)key;
+- (void)setObject:(id)obj forKeyedSubscript:(id <NSCopying>)key;
+
 #pragma mark ENUMERATION
 
 - (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block;
