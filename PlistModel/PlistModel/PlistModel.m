@@ -1,6 +1,6 @@
 //
 //  PlistModel.m
-//  ShakeLog
+//  PlistModel
 //
 //  Created by Logan Wright on 4/29/14.
 //  Copyright (c) 2014 Logan Wright. All rights reserved.
@@ -448,6 +448,7 @@
          */
         [_backingDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
             if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
+                NSLog(@"PropertyName: %@ andDictKey: %@", propertyName, key);
                 dictionaryKey = key;
                 *stop = YES;
             }
@@ -456,7 +457,7 @@
     }
     
     // Get our setter from our string
-    SEL propertySetterSelector = [self setterSelectorForPropertyName:dictionaryKey];
+    SEL propertySetterSelector = [self setterSelectorForPropertyName:propertyName];
     
     // Make sure it exists as a property
     if ([self respondsToSelector:propertySetterSelector]) {
@@ -554,6 +555,11 @@
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
     
+        if (_isBundledPlist) {
+            // Bundled plists are immutable
+            return;
+        }
+        
         // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
         if (![_observingKeyPaths containsObject:aKey]) {
             [_observingKeyPaths addObject:aKey];
@@ -575,6 +581,11 @@
 - (void) removeObjectForKey:(id)aKey {
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
+        
+        if (_isBundledPlist) {
+            // bundled plists are immutable ... return.
+            return;
+        }
         
         // Remove object from background dictionary
         [_backingDictionary removeObjectForKey:aKey];
