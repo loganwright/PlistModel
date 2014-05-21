@@ -31,12 +31,9 @@
         // Will be null on first run because the plist doesn't exist yet and we haven't set anything
         NSLog(@"DM: Name: %@", dynamicModel.name);
         NSLog(@"DM: Counter: %i", dynamicModel.counter);
-        dynamicModel.name = @"Hello World!";
+        dynamicModel.name = @"Hello Worldly!";
         dynamicModel.counter++;
         NSLog(@"\n\n\n");
-        //dynamicModel[@"setter"] = @"Fancy";
-        
-        NSLog(@"DM: Name: %@ AND %@", dynamicModel[@"name"], dynamicModel[@"nAmE"]);
     }];
     
     // Loading Custom Plist From Bundle
