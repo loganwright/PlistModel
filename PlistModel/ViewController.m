@@ -26,7 +26,7 @@
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        dynamicModel.name = @"A new names";
+        dynamicModel.name = @"A new nameasdfs";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         dynamicModel.counter++;
         NSLog(@"Counter: %i", dynamicModel.counter);
@@ -37,6 +37,16 @@
                 NSLog(@"SAVED");
             }];
         }
+    }];
+    
+    [PlistModel plistNamed:@"Info" inBackgroundWithBlock:^(PlistModel *plistModel) {
+        NSLog(@"\n");
+        NSLog(@"** Info.plist **");
+        NSLog(@"Development Region: %@", plistModel.CFBundleDevelopmentRegion);
+        NSLog(@"Version: %@", plistModel.CFBundleVersion);
+        NSLog(@"Application requires iPhone environment? %@", plistModel.LSRequiresIPhoneOS ? @"YES" : @"NO");
+        // Etc ... (see PlistModel.h for full list)
+        NSLog(@"\n");
     }];
     
     /*
