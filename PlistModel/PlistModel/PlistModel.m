@@ -583,17 +583,45 @@
             return;
         }
         
+        __block NSString *blockKey = (NSString *)aKey;
+        __block NSString *blockPropertyName;
+        
+        // Check if key matches property, if it does, sync to property value. Properties take priority
+        [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
+            if ([propertyName caseInsensitiveCompare:blockKey] == NSOrderedSame) {
+                // key matches property, must sync - Properties take priority
+                blockPropertyName = propertyName;
+                *stop = YES;
+            }
+        }];
+        
+        
+        
+        // Check to see if there's already a key matching our current key
+        if (!_backingDictionary[blockKey]) {
+            /*
+             If dictionary value doesn't exist, do case insensitive to check for correctKey
+             */
+            [_backingDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
+                if ([key caseInsensitiveCompare:blockKey] == NSOrderedSame) {
+                    blockKey = key;
+                    *stop = YES;
+                }
+            }];
+            
+        }
+        
         // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
-        if (![_observingKeyPaths containsObject:aKey]) {
-            [_observingKeyPaths addObject:aKey];
+        if (![_observingKeyPaths containsObject:blockKey]) {
+            [_observingKeyPaths addObject:blockKey];
             [_backingDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
         }
         
         // Set the object to our background dictionary
-        _backingDictionary[aKey] = anObject;
+        _backingDictionary[blockKey] = anObject;
         
         // Update our property -- Just to keep everything synced
-        [self setPropertyFromDictionaryValueWithName:(NSString *)aKey];
+        [self setPropertyFromDictionaryValueWithName:blockPropertyName];
     }
     else {
         NSLog(@"Error - Unable to add Object: PlistModel can only take strings as keys");
@@ -604,6 +632,44 @@
 - (void) removeObjectForKey:(id)aKey {
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
+        if (_isBundledPlist) {
+            // Bundled plists are immutable
+            return;
+        }
+        
+        __block NSString *blockKey = (NSString *)aKey;
+        __block NSString *blockPropertyName;
+        
+        // Check if key matches property, if it does, sync to property value. Properties take priority
+        [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
+            if ([propertyName caseInsensitiveCompare:blockKey] == NSOrderedSame) {
+                // key matches property, must sync - Properties take priority
+                blockPropertyName = propertyName;
+                *stop = YES;
+            }
+        }];
+        
+        
+        
+        // Check to see if there's already a key matching our current key
+        if (!_backingDictionary[blockKey]) {
+            /*
+             If dictionary value doesn't exist, do case insensitive to check for correctKey
+             */
+            [_backingDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
+                if ([key caseInsensitiveCompare:blockKey] == NSOrderedSame) {
+                    blockKey = key;
+                    *stop = YES;
+                }
+            }];
+            
+        }
+        
+        // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
+        if (![_observingKeyPaths containsObject:blockKey]) {
+            [_observingKeyPaths addObject:blockKey];
+            [_backingDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+        }
         
         if (_isBundledPlist) {
             // bundled plists are immutable ... return.
@@ -611,14 +677,14 @@
         }
         
         // Remove object from background dictionary
-        [_backingDictionary removeObjectForKey:aKey];
+        [_backingDictionary removeObjectForKey:blockKey];
         
         /*
          I don't remove KVO observers here because, I don't think it's immediately necessary.  I will remove all observers on dealloc, and it's possible the user will still use this key to add objects.
          */
         
         // Update our property -- Just to keep everything synced
-        [self setPropertyFromDictionaryValueWithName:(NSString *)aKey];
+        [self setPropertyFromDictionaryValueWithName:blockPropertyName];
     }
     else {
         NSLog(@"Error - Unable to remove Object: Plist Model can only take strings as keys");
@@ -635,7 +701,7 @@
     
     // Check if key matches property, if it does, sync to property value. Properties take priority
     [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
-        if ([propertyName caseInsensitiveCompare:aKey] == NSOrderedSame) {
+        if ([propertyName caseInsensitiveCompare:blockKey] == NSOrderedSame) {
             // key matches property, must sync - Properties take priority
             [self setDictionaryValueFromPropertyWithName:propertyName];
             *stop = YES;
