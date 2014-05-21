@@ -11,7 +11,7 @@ PlistModel was created to have interaction with Plists be as simple and pleasant
 
 ###Features
 
-- Automatically populates Plist values into Properties at runtime.
+- Automatically populates Plist values into matching properties at runtime.
 - Works with bundled Plists, or creates new ones automatically
 - Automatically saves
 - Background methods to keep UI snappy
