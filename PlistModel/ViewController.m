@@ -26,32 +26,22 @@
     // Dynamically loading and saving Plist ... Will print Null 1st run
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
+        NSLog(@"\n\n\n");
+        NSLog(@"** DynamicModel.plist **");
         // Will be null on first run
-        NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        NSLog(@"Counter: %i", dynamicModel.counter);
+        NSLog(@"DM: Name: %@", dynamicModel.name);
+        NSLog(@"DM: Counter: %i", dynamicModel.counter);
         dynamicModel.name = @"Hello World!";
         dynamicModel.counter++;
-        NSLog(@"DynamicModel: %@", dynamicModel);
+        NSLog(@"\n\n\n");
     }];
-    
-    /*
-    [PlistModel plistNamed:@"Info" inBackgroundWithBlock:^(PlistModel *plistModel) {
-        NSLog(@"\n");
-        NSLog(@"** Info.plist **");
-        NSLog(@"Development Region: %@", plistModel.CFBundleDevelopmentRegion);
-        NSLog(@"Version: %@", plistModel.CFBundleVersion);
-        NSLog(@"Application requires iPhone environment? %@", plistModel.LSRequiresIPhoneOS ? @"YES" : @"NO");
-        // Etc ... (see PlistModel.h for full list)
-        NSLog(@"\n");
-    }];
-    */
     
     [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
         // Get our custom model from return block
         CustomModel * customModel = (CustomModel *)plistModel;
         
-        NSLog(@"\n");
+        NSLog(@"\n\n\n");
         NSLog(@"** CustomModel.plist **");
         NSLog(@"CM:StringProperty: %@", customModel.stringPropertyKey);
         NSLog(@"CM:DateProperty: %@", customModel.datePropertyKey);
@@ -60,8 +50,18 @@
         NSLog(@"CM:IntProperty: %i", customModel.intPropertyKey);
         NSLog(@"CM:BoolProperty: %@", customModel.boolPropertyKey ? @"YES" : @"NO");
         NSLog(@"CM:FloatProperty: %f", customModel.floatPropertyKey);
-        NSLog(@"\n");
+        NSLog(@"\n\n\n");
         
+    }];
+    
+    [PlistModel plistNamed:@"Info" inBackgroundWithBlock:^(PlistModel *plistModel) {
+        NSLog(@"\n\n\n");
+        NSLog(@"** Info.plist **");
+        NSLog(@"Development Region: %@", plistModel.CFBundleDevelopmentRegion);
+        NSLog(@"Version: %@", plistModel.CFBundleVersion);
+        NSLog(@"Application requires iPhone environment? %@", plistModel.LSRequiresIPhoneOS ? @"YES" : @"NO");
+        // Etc ... (see PlistModel.h for full list)
+        NSLog(@"\n\n\n\n");
     }];
 }
 

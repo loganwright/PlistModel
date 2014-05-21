@@ -460,7 +460,6 @@
          */
         [_backingDictionary.allKeys enumerateObjectsUsingBlock:^(NSString * key, NSUInteger idx, BOOL *stop) {
             if ([key caseInsensitiveCompare:propertyName] == NSOrderedSame) {
-                NSLog(@"PropertyName: %@ andDictKey: %@", propertyName, key);
                 dictionaryKey = key;
                 *stop = YES;
             }
