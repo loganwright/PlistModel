@@ -26,7 +26,7 @@
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
-        dynamicModel.name = @"A new nameasdfs";
+        dynamicModel.name = @"A fancy spancy nameasdfs";
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
         dynamicModel.counter++;
         NSLog(@"Counter: %i", dynamicModel.counter);
