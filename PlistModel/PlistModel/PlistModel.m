@@ -625,6 +625,12 @@
     return [_backingDictionary keyEnumerator];
 }
 
+#pragma mark ENUMERATION
+
+- (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block {
+    [_backingDictionary enumerateKeysAndObjectsUsingBlock:block];
+}
+
 #pragma mark KVO OBSERVING
 
 - (void) observeValueForKeyPath:(NSString *)keyPath
