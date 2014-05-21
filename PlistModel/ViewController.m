@@ -28,7 +28,7 @@
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
         NSLog(@"\n\n\n");
         NSLog(@"** DynamicModel.plist **");
-        // Will be null on first run
+        // Will be null on first run because the plist doesn't exist yet and we haven't set anything
         NSLog(@"DM: Name: %@", dynamicModel.name);
         NSLog(@"DM: Counter: %i", dynamicModel.counter);
         dynamicModel.name = @"Hello World!";
@@ -36,6 +36,7 @@
         NSLog(@"\n\n\n");
     }];
     
+    // Loading Custom Plist From Bundle
     [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         
         // Get our custom model from return block
@@ -54,6 +55,7 @@
         
     }];
     
+    // Loading Info.plist
     [PlistModel plistNamed:@"Info" inBackgroundWithBlock:^(PlistModel *plistModel) {
         NSLog(@"\n\n\n");
         NSLog(@"** Info.plist **");
