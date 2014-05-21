@@ -60,7 +60,7 @@ The logic that connects Plist keys to properties is case insensitive. Do not dup
 
 The properties are automatically populated at runtime without any additional code.  Running in background is optional, but loading files from the directory can sometimes be an expensive operation.  Background methods are suggested.
 
-#Quick Set Up - PLIST CREATED DYNAMICALLY
+#Quick Set Up - PLIST CREATED DYNAMICALLY - MUTABLE
 
 ###Step 1: Declare properties you'd like to use in .h
 
