@@ -3,11 +3,9 @@ PlistModel
 
 A Class For Easily Interacting With Plists as Objects via Automatically Set Properties
 
-#Getting Started
+###Set Up - CUSTOM PLIST IN BUNDLE
 
-##Set Up - CUSTOM PLIST IN BUNDLE
-
-###Step 1: Set up your Plist
+####Step 1: Set up your Plist
 
 In `CustomModel.plist`
 
@@ -15,7 +13,7 @@ In `CustomModel.plist`
   <img src="https://raw.githubusercontent.com/LoganWright/PlistModel/master/PlistModel/Images/PlistExample.png"><img />
 </p>
 
-###Step 2: Add Corresponding Properties to Subclass
+####Step 2: Add Corresponding Properties to Subclass
 
 In `CustomModel.h`
 
@@ -38,7 +36,7 @@ In `CustomModel.h`
 
 The logic that connects Plist keys to properties is case insensitive. Do not duplicate keys in your Plist or this may cause errors.
 
-###Step 3: Load and Use Plist
+####Step 3: Load and Use Plist
 
 ```ObjC
 [CustomModel plistNamed:@"CustomModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
@@ -62,9 +60,9 @@ The logic that connects Plist keys to properties is case insensitive. Do not dup
 
 The properties are automatically populated at runtime without any additional code.  Running in background is optional, but loading files from the directory can sometimes be an expensive operation.  Background methods are suggested.
 
-##Set Up - PLIST CREATED DYNAMICALLY - **MUTABLE**
+###Set Up - PLIST CREATED DYNAMICALLY - **MUTABLE**
 
-###Step 1: Declare properties you'd like to use in .h
+####Step 1: Declare properties you'd like to use in .h
 
 In `DynamicModel.h`
 
@@ -80,7 +78,7 @@ In `DynamicModel.h`
 
 ```
 
-###Step 2: Interact with your Plist:
+####Step 2: Interact with your Plist:
 
 ```ObjC
 [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
@@ -96,9 +94,9 @@ In `DynamicModel.h`
 
 If no Plist already exists at the specified name, a new one will be created automatically.  PlistModel will save in the background automatically on `dealloc` or you can call save explicitly using `saveInBackgroundWithBlock`.  
 
-##Set Up: INTERACTING WITH THE INFO.PLIST
+###Set Up: INTERACTING WITH THE INFO.PLIST
 
-###Step 1: Call PlistModel w/o Subclassing
+####Step 1: Call PlistModel w/o Subclassing
 
 ```ObjC
 [PlistModel plistNamed:@"Info" inBackgroundWithBlock:^(PlistModel *plistModel) {
@@ -114,7 +112,7 @@ If no Plist already exists at the specified name, a new one will be created auto
 
 You can find more available properties in `PlistModel.h`
 
-#PlistModel with Dynamic Keys
+##PlistModel with Dynamic Keys
 
 You can also interact with PlistModel as if it is a mutableDictionary for keys that you might not know ahead of time and thus can't set as properties.  For these situations, you can use:
 
