@@ -132,27 +132,13 @@ You can also interact with PlistModel as if it is a mutableDictionary for keys t
 
 ```ObjC
 instanceOfPlistModel[@"dynamicKey"] = @"dynamicValue";
-```
-
-###NOTE:
-Do NOT interact w/ matching keys and properties interchangeably or you may get unpredictable results.  For example, don't do:
-
-```ObjC
-***** BAD CODE -- DO NOT IMPLEMENT! *****
-instanceOfPlistModel.dynamicKey = @"dynamicValue";
 NSString * dynamicValue = instanceOfPlistModel[@"dynamicKey"];
 ```
 
-In the above example `dynamicValue` may not be equal to the value set.  
+###NOTE:
 
-This only applies to MATCHING keys and properties, using the two types of interaction for non-matching keys is acceptable.  For example, the following code would be ok:
-
-```ObjC
-// OK to use :)
-instanceOfPlistModel.someProperty = @"someValue";
-instanceOfPlistModel[@"anotherProperty"] = @"anotherValue";
-```
-
+1. Working with properties this way will be a touch slower than working with properties.
+2. Keys are case insensitive which means "foo" and "fOo" and "FOO" will all ultimately point to the same address.  Keys must not match in this way.
 
 
 
