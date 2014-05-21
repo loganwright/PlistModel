@@ -3,7 +3,21 @@ PlistModel
 
 A Class For Easily Interacting With Plists as Objects via Automatically Set Properties
 
-###Set Up - CUSTOM PLIST IN BUNDLE
+<h3 align="center"> Version 1.0.0 Released 20 May 2014! </h3>
+
+###What is it, and why do I need it?
+
+PlistModel was created to have interaction with Plists be as simple and pleasant as possible.  Sometimes a project requires persistance that just begs to be stored in a Plist.  Whether you need to generate mutable Plists dynamically, or read Plists from the main bundle, this class makes interaction simple and painless.
+
+###Features
+
+- Automatically populates Plist values into Properties at runtime.
+- Works with bundled Plists, or creates new ones automatically
+- Automatically saves
+- Background methods to keep UI snappy
+- Smart saving only writes files if dirty
+
+###Set Up - Using a Custom Plist included in Bundle
 
 ####Step 1: Set up your Plist
 
@@ -60,7 +74,7 @@ The logic that connects Plist keys to properties is case insensitive. Do not dup
 
 The properties are automatically populated at runtime without any additional code.  Running in background is optional, but loading files from the directory can sometimes be an expensive operation.  Background methods are suggested.
 
-###Set Up - PLIST CREATED DYNAMICALLY - **MUTABLE**
+###Set Up - Dynamically Created Plist - **MUTABLE**
 
 ####Step 1: Declare properties you'd like to use in .h
 
@@ -94,7 +108,7 @@ In `DynamicModel.h`
 
 If no Plist already exists at the specified name, a new one will be created automatically.  PlistModel will save in the background automatically on `dealloc` or you can call save explicitly using `saveInBackgroundWithBlock`.  
 
-###Set Up: INTERACTING WITH THE INFO.PLIST
+###Set Up: Using the Default Info.plist
 
 ####Step 1: Call PlistModel w/o Subclassing
 
