@@ -3,7 +3,7 @@ PlistModel
 
 A Class For Easily Interacting With Plists as Objects via Automatically Set Properties
 
-#Quick Set Up - PLIST IN BUNDLE
+##Set Up - PLIST IN BUNDLE
 
 ###Step 1: Set up your Plist
 
@@ -60,7 +60,7 @@ The logic that connects Plist keys to properties is case insensitive. Do not dup
 
 The properties are automatically populated at runtime without any additional code.  Running in background is optional, but loading files from the directory can sometimes be an expensive operation.  Background methods are suggested.
 
-#Quick Set Up - PLIST CREATED DYNAMICALLY - MUTABLE
+## Set Up - PLIST CREATED DYNAMICALLY - MUTABLE
 
 ###Step 1: Declare properties you'd like to use in .h
 
@@ -93,4 +93,3 @@ In `DynamicModel.h`
 ```
 
 If no Plist already exists at the specified name, a new one will be created automatically.  PlistModel will save in the background automatically on `dealloc` or you can call save explicitly using `saveInBackgroundWithBlock`.  
-
