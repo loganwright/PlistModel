@@ -26,10 +26,11 @@
     // Dynamically loading and saving Plist ... Will print Null 1st run
     [DynamicModel plistNamed:@"DynamicModel" inBackgroundWithBlock:^(PlistModel *plistModel) {
         DynamicModel * dynamicModel = (DynamicModel *)plistModel;
+        // Will be null on first run
         NSLog(@"DynamicModel.name = %@", dynamicModel.name);
+        NSLog(@"Counter: %i", dynamicModel.counter);
         dynamicModel.name = @"Hello World!";
         dynamicModel.counter++;
-        NSLog(@"Counter: %i", dynamicModel.counter);
         NSLog(@"DynamicModel: %@", dynamicModel);
     }];
     
@@ -50,7 +51,7 @@
         // Get our custom model from return block
         CustomModel * customModel = (CustomModel *)plistModel;
         
-        //NSLog(@"\n");
+        NSLog(@"\n");
         NSLog(@"** CustomModel.plist **");
         NSLog(@"CM:StringProperty: %@", customModel.stringPropertyKey);
         NSLog(@"CM:DateProperty: %@", customModel.datePropertyKey);
