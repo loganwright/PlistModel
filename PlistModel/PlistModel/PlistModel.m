@@ -589,7 +589,7 @@
         // Check if key matches property, if it does, sync to property value. Properties take priority
         [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
             if ([propertyName caseInsensitiveCompare:blockKey] == NSOrderedSame) {
-                // key matches property, must sync - Properties take priority
+                // key matches property
                 blockPropertyName = propertyName;
                 *stop = YES;
             }
@@ -614,7 +614,7 @@
         // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
         if (![_observingKeyPaths containsObject:blockKey]) {
             [_observingKeyPaths addObject:blockKey];
-            [_backingDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
+            [_backingDictionary addObserver:self forKeyPath:blockKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
         }
         
         // Set the object to our background dictionary
@@ -632,6 +632,7 @@
 - (void) removeObjectForKey:(id)aKey {
     
     if ([[(id)aKey class]isSubclassOfClass:[NSString class]]) {
+        
         if (_isBundledPlist) {
             // Bundled plists are immutable
             return;
@@ -643,7 +644,7 @@
         // Check if key matches property, if it does, sync to property value. Properties take priority
         [_propertyNames enumerateObjectsUsingBlock:^(NSString *propertyName, NSUInteger idx, BOOL *stop) {
             if ([propertyName caseInsensitiveCompare:blockKey] == NSOrderedSame) {
-                // key matches property, must sync - Properties take priority
+                // key matches property
                 blockPropertyName = propertyName;
                 *stop = YES;
             }
@@ -663,17 +664,6 @@
                 }
             }];
             
-        }
-        
-        // We must observe this key before we set it, if we aren't already, otherwise, will not trigger dirty!
-        if (![_observingKeyPaths containsObject:blockKey]) {
-            [_observingKeyPaths addObject:blockKey];
-            [_backingDictionary addObserver:self forKeyPath:(NSString *)aKey options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld context:nil];
-        }
-        
-        if (_isBundledPlist) {
-            // bundled plists are immutable ... return.
-            return;
         }
         
         // Remove object from background dictionary
