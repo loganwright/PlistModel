@@ -628,7 +628,30 @@
 #pragma mark ENUMERATION
 
 - (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block {
+    
+    [self synchronizePropertiesToDictionary];
+    
     [_backingDictionary enumerateKeysAndObjectsUsingBlock:block];
+}
+- (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(id key, id obj, BOOL *stop))block {
+    
+    [self synchronizePropertiesToDictionary];
+    
+    [_backingDictionary enumerateKeysAndObjectsWithOptions:opts usingBlock:block];
+}
+#pragma mark KEYS & VALUES
+
+- (NSArray *)allKeys {
+    
+    [self synchronizePropertiesToDictionary];
+    
+    return _backingDictionary.allKeys;
+}
+- (NSArray *)allValues {
+    
+    [self synchronizePropertiesToDictionary];
+    
+    return _backingDictionary.allValues;
 }
 
 #pragma mark KVO OBSERVING

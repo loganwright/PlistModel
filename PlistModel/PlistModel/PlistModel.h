@@ -114,5 +114,11 @@
 #pragma mark ENUMERATION
 
 - (void)enumerateKeysAndObjectsUsingBlock:(void (^)(id key, id obj, BOOL *stop))block;
+- (void)enumerateKeysAndObjectsWithOptions:(NSEnumerationOptions)opts usingBlock:(void (^)(id key, id obj, BOOL *stop))block;
+
+#pragma mark KEYS & VALUES
+
+- (NSArray *)allKeys;
+- (NSArray *)allValues;
 
 @end
