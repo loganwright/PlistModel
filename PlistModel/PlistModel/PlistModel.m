@@ -511,27 +511,27 @@
     
             // Set PlistValue to property
             if (strcmp(typeOfProperty, @encode(id)) == 0) {
-                //NSLog(@"Is Object");
+                // NSLog(@"Is Object");
                 void (*func)(id, SEL, id) = (void *)imp;
                 func(self, propertySetterSelector, objectFromDictionaryForProperty);
             }
             else if (strcmp(typeOfProperty, @encode(BOOL)) == 0) {
-                //NSLog(@"Is Bool");
+                // NSLog(@"Is Bool");
                 void (*func)(id, SEL, BOOL) = (void *)imp;
                 func(self, propertySetterSelector, [objectFromDictionaryForProperty boolValue]);
             }
             else if (strcmp(typeOfProperty, @encode(int)) == 0) {
-                //NSLog(@"Is Int");
+                // NSLog(@"Is Int");
                 void (*func)(id, SEL, int) = (void *)imp;
                 func(self, propertySetterSelector, [objectFromDictionaryForProperty intValue]);
             }
             else if (strcmp(typeOfProperty, @encode(float)) == 0) {
-                //NSLog(@"Is Float");
+                // NSLog(@"Is Float");
                 void (*func)(id, SEL, float) = (void *)imp;
                 func(self, propertySetterSelector, [objectFromDictionaryForProperty floatValue]);
             }
             else if (strcmp(typeOfProperty, @encode(double)) == 0) {
-                //NSLog(@"Is Double");
+                // NSLog(@"Is Double");
                 void (*func)(id, SEL, double) = (void *)imp;
                 func(self, propertySetterSelector, [objectFromDictionaryForProperty doubleValue]);
             }
