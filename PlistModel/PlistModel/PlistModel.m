@@ -318,11 +318,21 @@
             
             if (strongSelf) {
                 
-                // Reset dirty - We need to access directly because of readOnly status
-                strongSelf->_isDirty = NO;
+                // Prepare Package
+                BOOL successful = NO;
                 
-                // Write and run completion
-                [strongSelf writeDictionaryInBackground:strongSelf.backingDictionary toPath:strongSelf.plistPath withCompletion:completion];
+                // Write to Path
+                successful = [strongSelf.backingDictionary writeToFile:strongSelf.plistPath atomically:YES];
+                
+                // Reset dirty - We need to access directly because of readOnly status
+                if (successful) strongSelf->_isDirty = NO;
+                
+                if (completion) {
+                    // Completion on Main Queue
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        completion(successful);
+                    });
+                }
 
             }
         });
