@@ -138,9 +138,8 @@ NSString * dynamicValue = instanceOfPlistModel[@"dynamicKey"];
 
 ###NOTE:
 
-1. Working with properties this way will be a touch slower than working with properties.
-2. Keys are case insensitive which means "foo" and "fOo" and "FOO" will all ultimately point to the same address.  Keys must not match in this way.
-
+1. Working with values this way will be a touch slower than working with properties.
+2. Keys are case insensitive which means `instanceOfPlistModel[@"foo"]` and `instanceOfPlistModel[@"fOo"]` and `instanceOfPlistModel[@"FOO"]` will all ultimately point to the same address.
 
 
 
