@@ -247,14 +247,19 @@
 
 #pragma mark SAVE & WRITE TO FILE
 
-- (void) writeDictionaryInBackground:(NSDictionary *)dictionary toPath:(NSString *)path withCompletion:(void(^)(void))completion {
+- (void) writeDictionaryInBackground:(NSDictionary *)dictionary toPath:(NSString *)path withCompletion:(void(^)(BOOL successful))completion {
+    
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), ^{
     
-        [dictionary writeToFile:path atomically:YES];
+        // Prepare Package
+        BOOL successful = NO;
+        
+        // Attempt Write
+        successful = [dictionary writeToFile:path atomically:YES];
         
         if (completion) {
             dispatch_sync(dispatch_get_main_queue(), ^{
-                completion();
+                completion(successful);
             });
         }
         else {
@@ -264,25 +269,37 @@
     });
 }
 
-- (void) save {
+- (BOOL) save {
     
     // Synchronize
     [self synchronizePropertiesToDictionary];
     
+    // Prep Return Package
+    BOOL successful = NO;
+    
     // Write
     if (_isDirty) {
-        [_backingDictionary writeToFile:_plistPath atomically:YES];
-        _isDirty = NO;
+        successful = [_backingDictionary writeToFile:_plistPath atomically:YES];
+        if (successful) _isDirty = NO;
     }
+    else {
+        successful = YES;
+    }
+    
+    return successful;
 }
 
-- (void) saveInBackgroundWithCompletion:(void(^)(void))completion {
+- (void) saveInBackgroundWithCompletion:(void(^)(BOOL successful))completion {
+    
+    // Prepare Package
+    BOOL successful = NO;
 
     // Bundled Plists are immutable, don't save (on real devices)
     if (_isBundledPlist) {
         if (completion) {
             NSLog(@"Bundled Plists are immutable on a RealDevice, New values will not save!");
-            completion();
+            successful = NO;
+            completion(successful);
         }
         return;
     }
@@ -301,12 +318,6 @@
             
             if (strongSelf) {
                 
-                // Get Path
-                NSString *path = _plistPath;
-                
-                // Write it to file
-                [strongSelf.backingDictionary writeToFile:path atomically:YES];
-                
                 // Reset dirty - We need to access directly because of readOnly status
                 strongSelf->_isDirty = NO;
                 
@@ -318,7 +329,8 @@
     }
     else if (completion) {
         // Object is clean, run completion if it exists
-        completion();
+        successful = YES;
+        completion(successful);
     }
     else {
         // clean w/ no completion
@@ -334,9 +346,16 @@
 
 - (const char *) typeOfArgumentForSelector:(SEL)selector atIndex:(int)index {
     NSMethodSignature * sig = [self methodSignatureForSelector:selector];
-    // Index 0 is object, Index 1 is the selector itself, arguments start at Index 2
-    const char * argType = [sig getArgumentTypeAtIndex:index];
-    return argType;
+    
+    if (index < sig.numberOfArguments) {
+        // Index 0 is object, Index 1 is the selector itself, arguments start at Index 2
+        const char * argType = [sig getArgumentTypeAtIndex:index];
+        return argType;
+    }
+    else {
+        NSLog(@"Index out of range of arguments");
+        return nil;
+    }
 }
 
 #pragma mark SELECTORS & PROPERTIES
@@ -475,10 +494,12 @@
     // Make sure it exists as a property
     if ([self respondsToSelector:propertySetterSelector]) {
         
+        // Index 0 is object, Index 1 is the selector: arguments start at Index 2
+        const char * typeOfProperty = [self typeOfArgumentForSelector:propertySetterSelector atIndex:2];
+        // Set our implementation
+        IMP imp = [self methodForSelector:propertySetterSelector];
+        
         if (_backingDictionary[dictionaryKey]) {
-            
-            // Index 0 is object, Index 1 is the selector: arguments start at Index 2
-            const char * typeOfProperty = [self typeOfArgumentForSelector:propertySetterSelector atIndex:2];
             
             // Get object from our dictionary
             id objectFromDictionaryForProperty = _backingDictionary[dictionaryKey];
@@ -487,10 +508,7 @@
             // 0 if same
             // A value greater than zero indicates that the first character that does not match has a greater value in str1 than in str2;
             // And a value less than zero indicates the opposite.
-            
-            // Set our implementation
-            IMP imp = [self methodForSelector:propertySetterSelector];
-            
+    
             // Set PlistValue to property
             if (strcmp(typeOfProperty, @encode(id)) == 0) {
                 //NSLog(@"Is Object");
@@ -520,9 +538,6 @@
             
         }
         else {
-            
-            // Index 0 is object, Index 1 is the selector: arguments start at Index 2
-            const char * typeOfProperty = [self typeOfArgumentForSelector:propertySetterSelector atIndex:2];
             
             // strcmp(str1, str2)
             // 0 if same
