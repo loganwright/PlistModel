@@ -208,7 +208,15 @@
     NSString * path = _plistPath;
     
     // Get Plist
-    NSMutableDictionary * plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
+    NSMutableDictionary *plist;
+#if TARGET_OS_IPHONE
+    plist = [[NSMutableDictionary alloc]initWithContentsOfFile:path];
+#elif TARGET_OS_MAC
+    NSData *plistData = [NSData dataWithContentsOfFile:path];
+    if (plistData) {
+        plist = [NSKeyedUnarchiver unarchiveObjectWithData:plistData];
+    }
+#endif
     
     // Return -- If null, return empty, do not return null
     _backingDictionary = (plist) ? plist : [NSMutableDictionary dictionary];
@@ -260,8 +268,12 @@
         BOOL successful = NO;
         
         // Attempt Write
+#if TARGET_OS_IPHONE
         successful = [dictionary writeToFile:path atomically:YES];
-        
+#elif TARGET_OS_MAC
+        NSData *data = [NSKeyedArchiver archivedDataWithRootObject:dictionary];
+        successful = [[NSFileManager defaultManager]createFileAtPath:path contents:data attributes:nil];
+#endif
         if (completion) {
             dispatch_sync(dispatch_get_main_queue(), ^{
                 completion(successful);
