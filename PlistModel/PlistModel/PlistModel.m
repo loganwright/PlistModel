@@ -148,10 +148,25 @@
         NSString * appendedPlistName = [NSString stringWithFormat:@"%@.plist", _plistName];
         
         // Fetch out plist & set to new path
-        NSArray *pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *documentsDirectory = [pathArray objectAtIndex:0];
+        NSArray *pathArray;
+        NSString *documentsDirectory;
+#if TARGET_OS_IPHONE
+        pathArray = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        documentsDirectory = [pathArray objectAtIndex:0];
         path = [documentsDirectory stringByAppendingPathComponent:appendedPlistName];
-        
+#elif TARGET_OS_MAC
+        NSString *name = [[NSBundle mainBundle] infoDictionary][(NSString *)kCFBundleNameKey];
+        pathArray = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+        documentsDirectory = [pathArray objectAtIndex:0];
+        NSString *directoryPath = [documentsDirectory stringByAppendingPathComponent:name];
+        NSFileManager *fileManager = [NSFileManager defaultManager];
+        BOOL isDir = NO;
+        if (![fileManager fileExistsAtPath:directoryPath isDirectory:&isDir]) {
+            NSError *err;
+            [fileManager createDirectoryAtPath:directoryPath withIntermediateDirectories:NO attributes:nil error:&err];
+        }
+        path = [directoryPath stringByAppendingPathComponent:appendedPlistName];
+#endif
     }
     _plistPath = path;
 }
